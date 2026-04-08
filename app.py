@@ -69,6 +69,7 @@ ui = {
     "company_mentions_chart": {"English": "Company Mentions", "中文": "热门公司提及热度"},
     "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"},
     "tab_glossary": {"English": "📖 AI Glossary & Learning", "中文": "📖 AI 概念科普与学习"},
+    "tab_career": {"English": "💼 Career & Interview Guide", "中文": "💼 岗位技能与面试指南"},
     "glossary_intro": {"English": "Transitioning to AI? Master the core concepts to decode industry news and job descriptions.", "中文": "准备转型 AI 领域求职？掌握这些核心概念与行话，助你快速看懂行业新闻与招聘要求。"},
     "word_of_day": {"English": "🌟 Word of the Day", "中文": "🌟 每日一词推荐"},
     "mark_learned": {"English": "✅ I've mastered this!", "中文": "✅ 我已掌握，今日打卡！"},
@@ -247,6 +248,98 @@ STRUCTURED_GLOSSARY = {
         "FLOPS (每秒浮点运算次数)": {
             "English": "Floating-point operations per second. A measure of computer performance, crucial for understanding the immense computational power required for AI.",
             "中文": "衡量计算机算力速度的指标。AI 模型的训练通常需要极高的 FLOPS，标志着极度密集的数学计算能力。"
+        }
+    }
+}
+
+# --- Career & Interview Data ---
+CAREER_GUIDE = {
+    "AI Product Manager / AI 产品经理": {
+        "desc": {
+            "English": "Responsible for bridging the gap between AI technical capabilities and user needs, defining product vision, and managing the AI product lifecycle.",
+            "中文": "负责将 AI 技术能力转化为解决用户痛点的产品。不仅要懂业务和用户体验，还要懂模型的边界和能力。"
+        },
+        "skills": {
+            "English": ["Product Strategy", "Understanding of LLM/Generative AI capabilities", "Prompt Engineering", "Data-driven Decision Making", "Cross-functional Communication"],
+            "中文": ["产品战略规划", "熟悉大模型(LLM)及生成式AI的能力与边界", "提示词工程 (Prompt Engineering)", "数据驱动决策与指标设计", "跨部门沟通与敏捷管理"]
+        },
+        "interview_q": {
+            "English": [
+                "How do you define the success metrics for an AI-powered feature?",
+                "Describe a situation where the AI model's output is unpredictable. How do you design the UX to handle this?",
+                "What is your framework for deciding whether to build a custom model or use an existing API like OpenAI?"
+            ],
+            "中文": [
+                "如果要在现有 App 中加入 AI 助手，你会如何定义这个功能的成功指标（北极星指标）？",
+                "大模型的输出具有随机性（甚至幻觉），在产品 UX/交互设计上，你会如何规避或缓解这种风险？",
+                "在评估是直接接入 OpenAI API 还是自己微调（Fine-tune）一个开源模型时，你的决策框架是什么？"
+            ]
+        }
+    },
+    "AI Prompt Engineer / 提示词工程师": {
+        "desc": {
+            "English": "Specializes in designing, testing, and refining prompts to get the optimal performance out of Large Language Models.",
+            "中文": "专门研究如何给 AI 下指令的专家。通过不断测试和优化提示词，让大模型稳定、高质量地输出符合业务需求的结果。"
+        },
+        "skills": {
+            "English": ["Advanced Prompting (Few-shot, CoT)", "Understanding LLM behaviors", "Python (Basic)", "A/B Testing", "Domain Knowledge"],
+            "中文": ["高级提示词技巧 (如 Few-shot, 思维链 CoT)", "深刻理解不同大模型的脾气与特性", "基础 Python 编程", "A/B 测试与批量评估能力", "特定领域的业务知识"]
+        },
+        "interview_q": {
+            "English": [
+                "Explain 'Chain of Thought' prompting and when you would use it.",
+                "How do you evaluate and measure the quality of a prompt's output at scale?",
+                "If a model keeps ignoring a specific constraint in your prompt, how do you debug and fix it?"
+            ],
+            "中文": [
+                "请解释什么是“思维链 (Chain of Thought)”提示，并在什么场景下使用它最有效？",
+                "当你在批量处理 1000 条数据时，如何量化和评估你的提示词输出质量？",
+                "如果大模型总是忽略你提示词中的某一条特定约束（比如“字数不超过50字”），你会如何调试和修改指令？"
+            ]
+        }
+    },
+    "AI Operations & Marketing / AI 运营与营销": {
+        "desc": {
+            "English": "Leverages AI tools to 10x marketing efficiency, manage communities, generate content, and drive growth for AI-native products.",
+            "中文": "利用各种 AI 工具（如 ChatGPT, Midjourney）将运营和营销效率提升十倍，同时负责 AI 原生产品的用户增长和社区管理。"
+        },
+        "skills": {
+            "English": ["Content Generation with AI", "Growth Hacking", "Community Management", "Data Analytics", "Familiarity with AI tool landscape"],
+            "中文": ["利用 AI 工具批量生成高质量图文/视频", "增长黑客与裂变玩法", "社区运营 (Discord/微信群)", "数据分析", "对最新 AI 工具生态极度敏感"]
+        },
+        "interview_q": {
+            "English": [
+                "Which AI tools do you use daily to improve your workflow, and what are their limitations?",
+                "How would you design a go-to-market strategy for a new B2B AI writing assistant?",
+                "How do you balance AI-generated content with human authenticity to engage a community?"
+            ],
+            "中文": [
+                "你每天都在使用哪些 AI 工具来提升工作效率？它们目前的局限性是什么？",
+                "如果要为一款全新的 B2B 垂直领域 AI 写作助手制定冷启动/推向市场 (Go-to-market) 策略，你会怎么做？",
+                "在社区运营中，你如何平衡 AI 生成内容的“高效率”和真人互动的“真实感”？"
+            ]
+        }
+    },
+    "AI Solutions Architect / AI 解决方案架构师": {
+        "desc": {
+            "English": "Works closely with clients to understand their business problems and designs technical AI solutions (like RAG pipelines) to solve them.",
+            "中文": "对接企业客户，深入理解他们的业务痛点，并利用现有的 AI 技术栈（如 RAG、Agent、大模型 API）为客户设计落地的技术方案。"
+        },
+        "skills": {
+            "English": ["System Architecture (RAG, Agents)", "Cloud Platforms (AWS, Azure)", "Client Communication", "Python/API integration", "Business Acumen"],
+            "中文": ["AI 系统架构设计 (熟悉 RAG 和 Agent 工作流)", "熟悉主流云平台及 AI 服务", "优秀的客户沟通与需求挖掘能力", "Python 开发及 API 集成能力", "深厚的商业洞察力"]
+        },
+        "interview_q": {
+            "English": [
+                "Walk me through the architecture of a Retrieval-Augmented Generation (RAG) system.",
+                "A client wants to build a chatbot using their highly confidential financial data. How do you ensure data privacy?",
+                "How do you estimate the token costs and latency for a high-traffic AI application?"
+            ],
+            "中文": [
+                "请为我详细讲解一个基于企业知识库的 RAG（检索增强生成）系统的标准架构和数据流转过程。",
+                "客户希望用他们极度机密的财务数据做一个内部 AI 问答机器人。在架构设计上，你如何保证数据的绝对安全和隐私？",
+                "对于一个高并发的 AI 对话应用，你会如何预估和控制 Token 的 API 调用成本以及响应延迟？"
+            ]
         }
     }
 }
@@ -602,7 +695,12 @@ if not df_news.empty:
     st.divider()
     
     if not filtered_df.empty:
-        main_tab1, main_tab2, main_tab3 = st.tabs([ui["tab_news"][lang], ui["tab_analytics"][lang], ui["tab_glossary"][lang]])
+        main_tab1, main_tab2, main_tab3, main_tab4 = st.tabs([
+            ui["tab_news"][lang], 
+            ui["tab_analytics"][lang], 
+            ui["tab_glossary"][lang],
+            ui["tab_career"][lang]
+        ])
         
         with main_tab1:
             # --- Top Headlines Section ---
@@ -819,6 +917,29 @@ if not df_news.empty:
                         with st.expander(f"**{term}**"):
                             st.write(desc[lang])
                     st.markdown("<br>", unsafe_allow_html=True)
+                    
+        with main_tab4:
+            st.subheader(ui["tab_career"][lang])
+            st.markdown("Explore emerging AI roles, required skills, and common interview questions to prepare for your next career move." if lang == "English" else "探索新兴的 AI 岗位、核心技能树以及常见的面试题，为你的下一次职业飞跃做好准备。")
+            st.markdown("---")
+            
+            for role, data in CAREER_GUIDE.items():
+                role_en, role_zh = role.split(" / ")
+                display_role = role_zh if lang == "中文" else role_en
+                
+                with st.expander(f"**{display_role}**", expanded=False):
+                    st.info(data["desc"][lang])
+                    
+                    col_sk, col_iq = st.columns(2)
+                    with col_sk:
+                        st.markdown("**🛠️ Core Skills / 核心技能树**" if lang == "中文" else "**🛠️ Core Skills**")
+                        for skill in data["skills"][lang]:
+                            st.markdown(f"- {skill}")
+                            
+                    with col_iq:
+                        st.markdown("**❓ Mock Interview / 模拟面试题**" if lang == "中文" else "**❓ Mock Interview**")
+                        for q in data["interview_q"][lang]:
+                            st.markdown(f"- {q}")
             
     else:
         st.warning(ui["no_data"][lang])
