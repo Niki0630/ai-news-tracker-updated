@@ -633,14 +633,14 @@ if selected_page in [ui["tab_news"][lang], ui["tab_analytics"][lang]]:
         
         if lang == "中文":
             with st.spinner(ui["translating"][lang]):
-                # Only translate English titles to Chinese
+                # Only translate English titles and summaries to Chinese
                 df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'zh-CN')
-                df_news["Summary"] = df_news["Summary_EN"] 
+                df_news["Summary"] = translate_texts(df_news["Summary_EN"].tolist(), 'zh-CN')
         else:
             with st.spinner("Translating Chinese sources to English..."):
-                # Translate Chinese titles to English to keep the English UI consistent
+                # Translate Chinese titles and summaries to English
                 df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'en')
-                df_news["Summary"] = df_news["Summary_EN"]
+                df_news["Summary"] = translate_texts(df_news["Summary_EN"].tolist(), 'en')
             
         
     # --- Sidebar Filters & Search ---
