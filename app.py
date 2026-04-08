@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from deep_translator import GoogleTranslator
 import time
 import datetime
+import random
 from dateutil import parser as date_parser
 import concurrent.futures
 from wordcloud import WordCloud
@@ -67,8 +68,11 @@ ui = {
     "topic_dist_chart": {"English": "AI Domain Distribution", "中文": "AI 细分领域分布"},
     "company_mentions_chart": {"English": "Company Mentions", "中文": "热门公司提及热度"},
     "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"},
-    "tab_glossary": {"English": "📖 AI Glossary", "中文": "📖 AI 概念科普"},
-    "glossary_intro": {"English": "Transitioning to AI? Here are the core concepts you need to know to decode industry news and job descriptions.", "中文": "准备转型 AI 领域求职？这里是你必须掌握的核心概念与行话，助你快速看懂行业新闻与招聘要求。"}
+    "tab_glossary": {"English": "📖 AI Glossary & Learning", "中文": "📖 AI 概念科普与学习"},
+    "glossary_intro": {"English": "Transitioning to AI? Master the core concepts to decode industry news and job descriptions.", "中文": "准备转型 AI 领域求职？掌握这些核心概念与行话，助你快速看懂行业新闻与招聘要求。"},
+    "word_of_day": {"English": "🌟 Word of the Day", "中文": "🌟 每日一词推荐"},
+    "mark_learned": {"English": "✅ I've mastered this!", "中文": "✅ 我已掌握，今日打卡！"},
+    "learned_success": {"English": "🎉 Awesome! You've learned something new today. Keep it up!", "中文": "🎉 太棒了！今天又进步了一点点，继续保持！"}
 }
 
 st.title(ui["title"][lang])
@@ -757,7 +761,43 @@ if not df_news.empty:
         with main_tab3:
             st.subheader(ui["tab_glossary"][lang])
             st.markdown(ui["glossary_intro"][lang])
+            
+            # --- Daily Word of the Day ---
+            # Use current date as random seed so it changes only once per day
+            today = datetime.datetime.now().date()
+            random.seed(today.toordinal())
+            
+            # Flatten glossary to pick a random term
+            flat_glossary = []
+            for category, terms in STRUCTURED_GLOSSARY.items():
+                for term, desc in terms.items():
+                    flat_glossary.append((category, term, desc))
+            
+            daily_cat, daily_term, daily_desc = random.choice(flat_glossary)
+            
+            # Initialize session state for tracking learning progress
+            if 'learned_words' not in st.session_state:
+                st.session_state.learned_words = set()
+            
             st.markdown("---")
+            st.markdown(f"### {ui['word_of_day'][lang]} ({today.strftime('%b %d, %Y')})")
+            with st.container(border=True):
+                st.markdown(f"#### {daily_term}")
+                cat_en, cat_zh = daily_cat.split(" / ")
+                st.caption(f"Category: {cat_zh if lang == '中文' else cat_en}")
+                st.info(daily_desc[lang])
+                
+                # Check if the user has marked it as learned today
+                if daily_term not in st.session_state.learned_words:
+                    if st.button(ui["mark_learned"][lang], key="btn_learn_daily", type="primary"):
+                        st.session_state.learned_words.add(daily_term)
+                        st.balloons()
+                        st.rerun()
+                else:
+                    st.success(ui["learned_success"][lang])
+                    
+            st.markdown("---")
+            st.markdown("### 📚 Browse the Full Dictionary")
             
             search_term = st.text_input("🔍 Search terms / 搜索名词", key="glossary_search").strip()
             
