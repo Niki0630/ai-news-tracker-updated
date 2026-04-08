@@ -47,8 +47,11 @@ ui = {
     "sort_time_desc": {"English": "Newest First", "中文": "按时间降序 (最新)"},
     "sort_time_asc": {"English": "Oldest First", "中文": "按时间升序 (最旧)"},
     "sort_sentiment": {"English": "Sentiment Score (High to Low)", "中文": "按情绪得分 (从高到低)"},
-    "topic_filter": {"English": "Filter by Topic", "中文": "按主题标签筛选"},
-    "company_filter": {"English": "Filter by Company", "中文": "按公司筛选"},
+    "topic_filter": {"English": "Topic", "中文": "主题"},
+    "company_filter": {"English": "Company", "中文": "公司"},
+    "region_filter": {"English": "Region", "中文": "国家/地区"},
+    "source_type_filter": {"English": "Source Type", "中文": "信息源类型"},
+    "time_range_filter": {"English": "Time Range", "中文": "时间跨度"},
     "all": {"English": "All", "中文": "全部"},
     "read_more": {"English": "Read Original Article", "中文": "阅读原文"},
     "summary": {"English": "Summary:", "中文": "摘要:"},
@@ -72,6 +75,20 @@ COMPANIES = [
     "OpenAI", "Anthropic", "Google", "DeepMind", "Microsoft", 
     "NVIDIA", "Meta", "Apple", "xAI", "Perplexity", "Mistral", "Tesla"
 ]
+
+REGIONS = [
+    "US / North America", "China / Asia", "Europe / EU", "Middle East"
+]
+
+SOURCE_TYPES = [
+    "Mainstream Media", "Tech Forums", "Research Papers"
+]
+
+TIME_RANGES = {
+    "Last 24 Hours": 1,
+    "Last 3 Days": 3,
+    "Last 7 Days": 7
+}
 
 # RSS Feeds List (Minimal Set)
 RSS_FEEDS = [
@@ -97,6 +114,7 @@ def tag_article(text):
     text_lower = text.lower()
     found_topics = []
     found_companies = []
+    found_regions = []
     
     # Check Topics
     if any(k in text_lower for k in ["agent", "代理"]): found_topics.append("Agent")
@@ -112,11 +130,27 @@ def tag_article(text):
         if comp.lower() in text_lower:
             found_companies.append(comp)
             
-    return found_topics[:3], found_companies[:5]
+    # Check Regions
+    if any(k in text_lower for k in ["us", "usa", "america", "biden", "washington", "硅谷", "美国", "北美"]): 
+        found_regions.append("US / North America")
+    if any(k in text_lower for k in ["china", "chinese", "asia", "beijing", "shanghai", "shenzhen", "中国", "亚洲", "北京", "上海"]): 
+        found_regions.append("China / Asia")
+    if any(k in text_lower for k in ["eu", "europe", "european", "brussels", "london", "欧盟", "欧洲", "英国"]): 
+        found_regions.append("Europe / EU")
+    if any(k in text_lower for k in ["middle east", "uae", "saudi", "dubai", "中东", "沙特", "阿联酋", "迪拜"]): 
+        found_regions.append("Middle East")
+            
+    return found_topics[:3], found_companies[:5], found_regions[:2]
+
+def get_source_type(source_name):
+    if "Hacker News" in source_name: return "Tech Forums"
+    if "arXiv" in source_name: return "Research Papers"
+    return "Mainstream Media"
 
 def fetch_single_feed(feed_info):
     feed_url = feed_info["url"]
     source_name = feed_info["source"]
+    source_type = get_source_type(source_name)
     feed = feedparser.parse(feed_url)
     items = []
     
@@ -134,7 +168,7 @@ def fetch_single_feed(feed_info):
         except:
             pub_date = datetime.datetime.now()
             
-        topics, comps = tag_article(title + " " + summary_text)
+        topics, comps, regions = tag_article(title + " " + summary_text)
         
         items.append({
             "Title_EN": title,
@@ -142,8 +176,10 @@ def fetch_single_feed(feed_info):
             "Link": entry.link,
             "Published_Date": pub_date,
             "Source": source_name,
+            "Source_Type": source_type,
             "Topics": topics,
-            "Companies": comps
+            "Companies": comps,
+            "Regions": regions
         })
     return items
 
@@ -247,11 +283,22 @@ if not df_news.empty:
         
         search_query = st.text_input(ui["search"][lang], "")
         
-        topic_options = [ui["all"][lang]] + TOPICS
-        selected_topic = st.selectbox(ui["topic_filter"][lang], topic_options)
-        
-        company_options = [ui["all"][lang]] + COMPANIES
-        selected_company = st.selectbox(ui["company_filter"][lang], company_options)
+        # Topic & Company Filters
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            selected_topic = st.selectbox(ui["topic_filter"][lang], [ui["all"][lang]] + TOPICS)
+        with col_f2:
+            selected_company = st.selectbox(ui["company_filter"][lang], [ui["all"][lang]] + COMPANIES)
+            
+        # Region & Source Type Filters
+        col_f3, col_f4 = st.columns(2)
+        with col_f3:
+            selected_region = st.selectbox(ui["region_filter"][lang], [ui["all"][lang]] + REGIONS)
+        with col_f4:
+            selected_source_type = st.selectbox(ui["source_type_filter"][lang], [ui["all"][lang]] + SOURCE_TYPES)
+            
+        # Time Range Filter
+        selected_time = st.selectbox(ui["time_range_filter"][lang], [ui["all"][lang]] + list(TIME_RANGES.keys()))
         
         sort_options = [ui["sort_time_desc"][lang], ui["sort_time_asc"][lang], ui["sort_sentiment"][lang]]
         selected_sort = st.selectbox(ui["sort_by"][lang], sort_options)
@@ -269,6 +316,24 @@ if not df_news.empty:
         
     if selected_company != ui["all"][lang]:
         filtered_df = filtered_df[filtered_df['Companies'].apply(lambda x: selected_company in x)]
+        
+    if selected_region != ui["all"][lang]:
+        filtered_df = filtered_df[filtered_df['Regions'].apply(lambda x: selected_region in x)]
+        
+    if selected_source_type != ui["all"][lang]:
+        filtered_df = filtered_df[filtered_df['Source_Type'] == selected_source_type]
+        
+    if selected_time != ui["all"][lang]:
+        days_limit = TIME_RANGES[selected_time]
+        cutoff_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days_limit)
+        
+        # Ensure timezone awareness for comparison
+        def check_date(d):
+            if d.tzinfo is None:
+                d = d.replace(tzinfo=datetime.timezone.utc)
+            return d >= cutoff_date
+            
+        filtered_df = filtered_df[filtered_df['Published_Date'].apply(check_date)]
         
     # Apply Sorting
     if selected_sort == ui["sort_time_desc"][lang]:
@@ -374,7 +439,7 @@ if not df_news.empty:
                 sent_text = "中立" if lang == "中文" else "Neutral"
                 
             # Create tag badges
-            tags = row['Topics'] + row['Companies']
+            tags = row['Topics'] + row['Companies'] + row['Regions']
             tag_str = " | ".join([f"`{t}`" for t in tags]) if tags else ""
             
             with st.expander(f"**{row['Title']}**"):
