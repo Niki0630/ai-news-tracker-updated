@@ -63,7 +63,7 @@ ui = {
     "tags": {"English": "Tags", "中文": "标签"},
     "tab_news": {"English": "📰 News Feed", "中文": "📰 实时新闻流"},
     "tab_analytics": {"English": "📊 Data Analytics", "中文": "📊 市场数据大屏"},
-    "top_headlines": {"English": "🔥 Top Headlines (Most Positive)", "中文": "🔥 今日核心利好头条"},
+    "top_headlines": {"English": "🔥 Daily Must-Reads (Most Important)", "中文": "🔥 每日必读 (重磅精选)"},
     "topic_dist_chart": {"English": "AI Domain Distribution", "中文": "AI 细分领域分布"},
     "company_mentions_chart": {"English": "Company Mentions", "中文": "热门公司提及热度"},
     "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"}
@@ -123,37 +123,40 @@ SOURCE_TYPES_ZH = {
 
 TIME_RANGES = {
     "Last 24 Hours": 1,
+    "Last 48 Hours": 2,
     "Last 3 Days": 3,
     "Last 7 Days": 7
 }
 
 TIME_RANGES_ZH = {
     "Last 24 Hours": "过去 24 小时",
+    "Last 48 Hours": "过去 48 小时",
     "Last 3 Days": "过去 3 天",
     "Last 7 Days": "过去 7 天"
 }
 
 # RSS Feeds List (Expanded Set for more volume)
+# Modify queries to only fetch recent news (when:2d instead of when:7d for Google News)
 RSS_FEEDS = [
-    # Google News (Mixed EN/CN) - Increased queries for more volume
-    {"url": "https://news.google.com/rss/search?q=%E6%99%BA%E8%83%BD%E4%BB%A3%E7%90%86%20OR%20AI%20Agent&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
-    {"url": "https://news.google.com/rss/search?q=%E5%BC%80%E6%BA%90%20%E6%A8%A1%E5%9E%8B%20OR%20open-source%20model&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
-    {"url": "https://news.google.com/rss/search?q=AI%20%E8%8A%AF%E7%89%87%20OR%20NVIDIA%20GPU&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
-    {"url": "https://news.google.com/rss/search?q=%E5%8C%BB%E7%96%97%20AI%20OR%20medical%20AI&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
-    {"url": "https://news.google.com/rss/search?q=%E8%87%AA%E5%8A%A8%E9%A9%BE%E9%A9%B6%20OR%20robotaxi&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
-    {"url": "https://news.google.com/rss/search?q=AI%20Act%20OR%20regulation&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
-    {"url": "https://news.google.com/rss/search?q=AI%20funding%20OR%20Series%20A&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
-    {"url": "https://news.google.com/rss/search?q=OpenAI%20OR%20ChatGPT&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
-    {"url": "https://news.google.com/rss/search?q=Anthropic%20OR%20Claude&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
-    {"url": "https://news.google.com/rss/search?q=Google%20DeepMind%20AI&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    # Google News (Mixed EN/CN) - Restricted to 2 days for freshness
+    {"url": "https://news.google.com/rss/search?q=%E6%99%BA%E8%83%BD%E4%BB%A3%E7%90%86%20OR%20AI%20Agent+when:2d&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=%E5%BC%80%E6%BA%90%20%E6%A8%A1%E5%9E%8B%20OR%20open-source%20model+when:2d&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=AI%20%E8%8A%AF%E7%89%87%20OR%20NVIDIA%20GPU+when:2d&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=%E5%8C%BB%E7%96%97%20AI%20OR%20medical%20AI+when:2d&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=%E8%87%AA%E5%8A%A8%E9%A9%BE%E9%A9%B6%20OR%20robotaxi+when:2d&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=AI%20Act%20OR%20regulation+when:2d&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=AI%20funding%20OR%20Series%20A+when:2d&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=OpenAI%20OR%20ChatGPT+when:2d&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=Anthropic%20OR%20Claude+when:2d&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=Google%20DeepMind%20AI+when:2d&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
     
-    # Hacker News
+    # Hacker News (inherently sorted by newest)
     {"url": "https://hnrss.org/newest?q=AI%20agent", "source": "Hacker News"},
     {"url": "https://hnrss.org/newest?q=OpenAI", "source": "Hacker News"},
     {"url": "https://hnrss.org/newest?q=NVIDIA", "source": "Hacker News"},
     {"url": "https://hnrss.org/newest?q=Llama%20OR%20open-source", "source": "Hacker News"},
     
-    # arXiv (Research Papers)
+    # arXiv (inherently sorted by newest submissions)
     {"url": "https://export.arxiv.org/rss/cs.AI", "source": "arXiv (AI)"},
     {"url": "https://export.arxiv.org/rss/cs.LG", "source": "arXiv (Machine Learning)"},
     {"url": "https://export.arxiv.org/rss/cs.CL", "source": "arXiv (Computation and Language)"}
@@ -487,8 +490,11 @@ if not df_news.empty:
         
         with main_tab1:
             # --- Top Headlines Section ---
-            # Show top 3 most positive articles if any
-            positive_news = filtered_df[filtered_df['Sentiment'] == 'Positive'].sort_values(by='Sentiment_Score', ascending=False)
+            # Show top 3 most important articles based on recency and sentiment
+            # We filter for 'Positive' or 'Neutral' and sort by Date first, then Sentiment
+            positive_news = filtered_df[filtered_df['Sentiment'] != 'Negative'].sort_values(
+                by=['Published_Date', 'Sentiment_Score'], ascending=[False, False]
+            )
             if not positive_news.empty:
                 st.subheader(ui["top_headlines"][lang])
                 cols = st.columns(min(3, len(positive_news)))
