@@ -6,3 +6,4 @@ plotly==6.0.0
 beautifulsoup4==4.13.3
 deep-translator==1.11.4
 python-dateutil==2.9.0.post0
+wordcloud==1.9.4

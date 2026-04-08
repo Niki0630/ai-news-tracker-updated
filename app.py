@@ -11,6 +11,8 @@ import time
 import datetime
 from dateutil import parser as date_parser
 import concurrent.futures
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 # --- Config ---
 st.set_page_config(page_title="AI Market Trend Analyzer", layout="wide", page_icon="🤖")
@@ -61,7 +63,10 @@ ui = {
     "tags": {"English": "Tags", "中文": "标签"},
     "tab_news": {"English": "📰 News Feed", "中文": "📰 实时新闻流"},
     "tab_analytics": {"English": "📊 Data Analytics", "中文": "📊 市场数据大屏"},
-    "top_headlines": {"English": "🔥 Top Headlines (Most Positive)", "中文": "🔥 今日核心利好头条"}
+    "top_headlines": {"English": "🔥 Top Headlines (Most Positive)", "中文": "🔥 今日核心利好头条"},
+    "topic_dist_chart": {"English": "AI Domain Distribution", "中文": "AI 细分领域分布"},
+    "company_mentions_chart": {"English": "Company Mentions", "中文": "热门公司提及热度"},
+    "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"}
 }
 
 st.title(ui["title"][lang])
@@ -254,20 +259,20 @@ def analyze_trends(df):
         'artificial', 'intelligence', 'ai', 'the', 'to', 'and', 'of', 'in', 'a', 'for', 'on', 'with', 
         'as', 'is', 'at', 'it', 'from', 'by', 'that', 'this', 'an', 'be', 'are', 'how', 'will', 'new', 
         'what', 'can', 'its', 'about', 'more', 'has', 'have', 'not', 'but', 'up', 'out', 'we', 'your',
-        'say', 'says', 'said', 'who', 'why', 'when', 'where', 'which', 'hn', 'show'
+        'say', 'says', 'said', 'who', 'why', 'when', 'where', 'which', 'hn', 'show', 'via'
     ])
     
     keywords = [w for w in text.split() if w not in stopwords and len(w) > 3]
     top_keywords = Counter(keywords).most_common(20)
     
-    return df, top_keywords
+    return df, top_keywords, " ".join(keywords)
 
 # --- Main Workflow ---
 with st.spinner(ui["scraping"][lang]):
     df_news = fetch_all_news()
 
 if not df_news.empty:
-    df_news, top_keywords = analyze_trends(df_news)
+    df_news, top_keywords, all_keywords_text = analyze_trends(df_news)
     
     # Ensure Published_Date is a datetime object before using .dt
     df_news['Published_Date'] = pd.to_datetime(df_news['Published_Date'], utc=True, errors='coerce')
@@ -427,7 +432,7 @@ if not df_news.empty:
         with main_tab2:
             # --- Visualizations ---
             st.subheader("📊 Analytics Dashboard")
-            tab1, tab2 = st.tabs(["Sentiment & Keywords", "Time & Sources"])
+            tab1, tab2, tab3 = st.tabs(["Sentiment & Keywords", "Domain & Company Distribution", "Time & Sources"])
             
             with tab1:
                 col_chart1, col_chart2 = st.columns(2)
@@ -450,17 +455,53 @@ if not df_news.empty:
                     st.plotly_chart(fig_sentiment, use_container_width=True)
                     
                 with col_chart2:
-                    df_keywords = pd.DataFrame(top_keywords[:10], columns=['Keyword', 'Count']) 
-                    df_keywords = df_keywords.sort_values(by='Count', ascending=True)
-                    fig_keywords = px.bar(
-                        df_keywords, x='Count', y='Keyword', orientation='h',
-                        color='Count', color_continuous_scale=px.colors.sequential.Blues,
-                        title=ui["keyword_chart"][lang]
-                    )
-                    fig_keywords.update_layout(margin=dict(t=40, b=0, l=0, r=0))
-                    st.plotly_chart(fig_keywords, use_container_width=True)
-                    
+                    # Generate WordCloud
+                    if all_keywords_text.strip():
+                        st.markdown(f"**{ui['wordcloud_chart'][lang]}**")
+                        wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='Blues', max_words=50).generate(all_keywords_text)
+                        fig_wc, ax = plt.subplots(figsize=(8, 4))
+                        ax.imshow(wordcloud, interpolation='bilinear')
+                        ax.axis('off')
+                        # Reduce padding
+                        plt.tight_layout(pad=0)
+                        st.pyplot(fig_wc)
+                        
             with tab2:
+                col_chart5, col_chart6 = st.columns(2)
+                
+                with col_chart5:
+                    # Extract and count topics
+                    all_topics = [t for sublist in filtered_df['Topics'] for t in sublist]
+                    if all_topics:
+                        topic_counts = Counter(all_topics).most_common(10)
+                        df_topics = pd.DataFrame(topic_counts, columns=['Topic', 'Count']).sort_values(by='Count', ascending=True)
+                        fig_topics = px.bar(
+                            df_topics, x='Count', y='Topic', orientation='h',
+                            title=ui["topic_dist_chart"][lang],
+                            color='Count', color_continuous_scale=px.colors.sequential.Purples
+                        )
+                        fig_topics.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                        st.plotly_chart(fig_topics, use_container_width=True)
+                    else:
+                        st.info("No topic data available for current filter." if lang == "English" else "当前筛选条件下无主题数据。")
+                        
+                with col_chart6:
+                    # Extract and count companies
+                    all_comps = [c for sublist in filtered_df['Companies'] for c in sublist]
+                    if all_comps:
+                        comp_counts = Counter(all_comps).most_common(10)
+                        df_comps = pd.DataFrame(comp_counts, columns=['Company', 'Count']).sort_values(by='Count', ascending=True)
+                        fig_comps = px.bar(
+                            df_comps, x='Count', y='Company', orientation='h',
+                            title=ui["company_mentions_chart"][lang],
+                            color='Count', color_continuous_scale=px.colors.sequential.Oranges
+                        )
+                        fig_comps.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                        st.plotly_chart(fig_comps, use_container_width=True)
+                    else:
+                        st.info("No company data available for current filter." if lang == "English" else "当前筛选条件下无公司提及数据。")
+
+            with tab3:
                 col_chart3, col_chart4 = st.columns(2)
                 with col_chart3:
                     time_counts = filtered_df.groupby('Day').size().reset_index(name='Count')
