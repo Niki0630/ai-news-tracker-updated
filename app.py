@@ -18,12 +18,6 @@ import matplotlib.pyplot as plt
 # --- Config ---
 st.set_page_config(page_title="AI Career Navigator", layout="wide", page_icon="🧭")
 
-# --- Language Selector ---
-with st.sidebar:
-    st.image("https://img.icons8.com/color/96/000000/compass.png", width=60)
-    lang = st.radio("Language / 语言", ["中文", "English"])
-    st.divider()
-
 # --- UI Dictionary ---
 ui = {
     "title": {"English": "🧭 AI Career Navigator", "中文": "🧭 AI 转型领航员"},
@@ -76,6 +70,23 @@ ui = {
     "mark_learned": {"English": "✅ I've mastered this!", "中文": "✅ 我已掌握，今日打卡！"},
     "learned_success": {"English": "🎉 Awesome! You've learned something new today. Keep it up!", "中文": "🎉 太棒了！今天又进步了一点点，继续保持！"}
 }
+
+# --- Navigation & Language ---
+with st.sidebar:
+    st.image("https://img.icons8.com/color/96/000000/compass.png", width=60)
+    lang = st.radio("Language / 语言", ["中文", "English"], label_visibility="collapsed")
+    st.divider()
+    
+    st.markdown("**Navigation / 导航**")
+    nav_options = [
+        ui["tab_news"][lang], 
+        ui["tab_analytics"][lang], 
+        ui["tab_glossary"][lang],
+        ui["tab_career"][lang],
+        ui["tab_cases"][lang]
+    ]
+    selected_page = st.radio("Navigation", nav_options, label_visibility="collapsed")
+    st.divider()
 
 st.title(ui["title"][lang])
 st.markdown(ui["desc"][lang])
@@ -606,411 +617,404 @@ def analyze_trends(df):
     
     return df, top_keywords, " ".join(keywords)
 
-# --- Main Workflow ---
-with st.spinner(ui["scraping"][lang]):
-    df_news = fetch_all_news()
+# --- Main Routing ---
+if selected_page in [ui["tab_news"][lang], ui["tab_analytics"][lang]]:
+    with st.spinner(ui["scraping"][lang]):
+        df_news = fetch_all_news()
 
-if not df_news.empty:
-    df_news, top_keywords, all_keywords_text = analyze_trends(df_news)
-    
-    # Ensure Published_Date is a datetime object before using .dt
-    df_news['Published_Date'] = pd.to_datetime(df_news['Published_Date'], utc=True, errors='coerce')
-    
-    df_news['Date_Str'] = df_news['Published_Date'].dt.strftime('%Y-%m-%d %H:%M')
-    df_news['Day'] = df_news['Published_Date'].dt.strftime('%Y-%m-%d')
-    
-    if lang == "中文":
-        with st.spinner(ui["translating"][lang]):
-            # Only translate English titles to Chinese
-            df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'zh-CN')
-            df_news["Summary"] = df_news["Summary_EN"] 
-    else:
-        with st.spinner("Translating Chinese sources to English..."):
-            # Translate Chinese titles to English to keep the English UI consistent
-            df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'en')
-            df_news["Summary"] = df_news["Summary_EN"]
+    if not df_news.empty:
+        df_news, top_keywords, all_keywords_text = analyze_trends(df_news)
+        
+        # Ensure Published_Date is a datetime object before using .dt
+        df_news['Published_Date'] = pd.to_datetime(df_news['Published_Date'], utc=True, errors='coerce')
+        
+        df_news['Date_Str'] = df_news['Published_Date'].dt.strftime('%Y-%m-%d %H:%M')
+        df_news['Day'] = df_news['Published_Date'].dt.strftime('%Y-%m-%d')
+        
+        if lang == "中文":
+            with st.spinner(ui["translating"][lang]):
+                # Only translate English titles to Chinese
+                df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'zh-CN')
+                df_news["Summary"] = df_news["Summary_EN"] 
+        else:
+            with st.spinner("Translating Chinese sources to English..."):
+                # Translate Chinese titles to English to keep the English UI consistent
+                df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'en')
+                df_news["Summary"] = df_news["Summary_EN"]
+            
         
     # --- Sidebar Filters & Search ---
-    with st.sidebar:
-        st.header(ui["filters"][lang])
-        
-        # Moved search to main area, keeping only advanced filters here
-        st.markdown(f"**{ui['time_range_filter'][lang]}**")
-        
-        # Prepare translated options for selectboxes
-        def get_display_opts(keys_list, zh_dict):
-            if lang == "中文":
-                return [ui["all"][lang]] + [zh_dict.get(k, k) for k in keys_list]
-            return [ui["all"][lang]] + keys_list
+        with st.sidebar:
+            st.header(ui["filters"][lang])
             
-        time_opts_display = get_display_opts(list(TIME_RANGES.keys()), TIME_RANGES_ZH)
-        selected_time_display = st.selectbox("Time", time_opts_display, label_visibility="collapsed")
-        # Map back to internal key
-        selected_time = list(TIME_RANGES.keys())[time_opts_display.index(selected_time_display) - 1] if selected_time_display != ui["all"][lang] else ui["all"][lang]
-        
-        st.markdown("---")
-        
-        # Topic & Company Filters
-        st.markdown(f"**{ui['topic_filter'][lang]} & {ui['company_filter'][lang]}**")
-        topic_opts_display = get_display_opts(TOPICS, TOPICS_ZH)
-        selected_topic_display = st.selectbox("Topic", topic_opts_display, label_visibility="collapsed")
-        selected_topic = TOPICS[topic_opts_display.index(selected_topic_display) - 1] if selected_topic_display != ui["all"][lang] else ui["all"][lang]
-        
-        selected_company = st.selectbox("Company", [ui["all"][lang]] + COMPANIES, label_visibility="collapsed")
+            # Moved search to main area, keeping only advanced filters here
+            st.markdown(f"**{ui['time_range_filter'][lang]}**")
             
-        st.markdown("---")
-        
-        # Region & Source Type Filters
-        st.markdown(f"**{ui['region_filter'][lang]} & {ui['source_type_filter'][lang]}**")
-        
-        region_opts_display = get_display_opts(REGIONS, REGIONS_ZH)
-        selected_region_display = st.selectbox("Region", region_opts_display, label_visibility="collapsed")
-        selected_region = REGIONS[region_opts_display.index(selected_region_display) - 1] if selected_region_display != ui["all"][lang] else ui["all"][lang]
-        
-        source_type_opts_display = get_display_opts(SOURCE_TYPES, SOURCE_TYPES_ZH)
-        selected_source_type_display = st.selectbox("Source", source_type_opts_display, label_visibility="collapsed")
-        selected_source_type = SOURCE_TYPES[source_type_opts_display.index(selected_source_type_display) - 1] if selected_source_type_display != ui["all"][lang] else ui["all"][lang]
-        
-        st.markdown("---")
-        if st.button("Reset Filters" if lang == "English" else "重置所有筛选"):
-            st.rerun()
-
-    # --- Main Area Search & Sort ---
-    col_search, col_sort = st.columns([3, 1], vertical_alignment="bottom")
-    with col_search:
-        search_query = st.text_input("Search", placeholder=ui["search"][lang], label_visibility="collapsed")
-    with col_sort:
-        sort_options = [ui["sort_time_desc"][lang], ui["sort_time_asc"][lang], ui["sort_sentiment"][lang]]
-        selected_sort = st.selectbox("Sort", sort_options, label_visibility="collapsed")
-
-    # --- Apply Filters ---
-    filtered_df = df_news.copy()
-    
-    if search_query:
-        search_mask = filtered_df['Title_EN'].str.contains(search_query, case=False, na=False) | \
-                      filtered_df['Title'].str.contains(search_query, case=False, na=False)
-        filtered_df = filtered_df[search_mask]
-        
-    if selected_topic != ui["all"][lang]:
-        filtered_df = filtered_df[filtered_df['Topics'].apply(lambda x: selected_topic in x)]
-        
-    if selected_company != ui["all"][lang]:
-        filtered_df = filtered_df[filtered_df['Companies'].apply(lambda x: selected_company in x)]
-        
-    if selected_region != ui["all"][lang]:
-        filtered_df = filtered_df[filtered_df['Regions'].apply(lambda x: selected_region in x)]
-        
-    if selected_source_type != ui["all"][lang]:
-        filtered_df = filtered_df[filtered_df['Source_Type'] == selected_source_type]
-        
-    if selected_time != ui["all"][lang]:
-        days_limit = TIME_RANGES[selected_time]
-        cutoff_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days_limit)
-        
-        # Ensure timezone awareness for comparison
-        def check_date(d):
-            if d.tzinfo is None:
-                d = d.replace(tzinfo=datetime.timezone.utc)
-            return d >= cutoff_date
-            
-        filtered_df = filtered_df[filtered_df['Published_Date'].apply(check_date)]
-        
-    # Apply Sorting
-    if selected_sort == ui["sort_time_desc"][lang]:
-        filtered_df = filtered_df.sort_values(by='Published_Date', ascending=False)
-    elif selected_sort == ui["sort_time_asc"][lang]:
-        filtered_df = filtered_df.sort_values(by='Published_Date', ascending=True)
-    elif selected_sort == ui["sort_sentiment"][lang]:
-        filtered_df = filtered_df.sort_values(by='Sentiment_Score', ascending=False)
-
-    # --- Metrics Section ---
-    col1, col2, col3 = st.columns(3)
-    col1.metric(ui["total_news"][lang], len(filtered_df))
-    
-    if not filtered_df.empty:
-        avg_score = filtered_df['Sentiment_Score'].mean()
-        if avg_score > 0.1: trend = ui["bullish"][lang]
-        elif avg_score < -0.1: trend = ui["bearish"][lang]
-        else: trend = ui["neutral"][lang]
-    else:
-        avg_score = 0.0
-        trend = ui["neutral"][lang]
-        
-    col2.metric(ui["sentiment"][lang], trend, f"{avg_score:.2f} Score")
-    col3.metric(ui["trending"][lang], top_keywords[0][0].capitalize() if top_keywords else "N/A")
-    
-    st.divider()
-    
-    if not filtered_df.empty:
-        main_tab1, main_tab2, main_tab3, main_tab4, main_tab5 = st.tabs([
-            ui["tab_news"][lang], 
-            ui["tab_analytics"][lang], 
-            ui["tab_glossary"][lang],
-            ui["tab_career"][lang],
-            ui["tab_cases"][lang]
-        ])
-        
-        with main_tab1:
-            # --- Top Headlines Section ---
-            # Show top 3 most important articles based on recency and sentiment
-            # We filter for 'Positive' or 'Neutral' and sort by Date first, then Sentiment
-            positive_news = filtered_df[filtered_df['Sentiment'] != 'Negative'].sort_values(
-                by=['Published_Date', 'Sentiment_Score'], ascending=[False, False]
-            )
-            if not positive_news.empty:
-                st.subheader(ui["top_headlines"][lang])
-                cols = st.columns(min(3, len(positive_news)))
-                for idx, (i, row) in enumerate(positive_news.head(3).iterrows()):
-                    with cols[idx]:
-                        with st.container(border=True):
-                            st.markdown(f"##### {row['Title']}")
-                            st.caption(f"{row['Source']} • {row['Date_Str']}")
-                            st.markdown(f"**[{ui['read_more'][lang]}]({row['Link']})**")
-                st.markdown("---")
-
-            # --- Expandable News Feed ---
-            st.subheader(ui["table_title"][lang])
-            
-            for idx, row in filtered_df.iterrows():
-                sentiment_val = row['Sentiment']
-                if sentiment_val == 'Positive':
-                    badge_color = "green"
-                    sent_text = "🟢 Bullish" if lang == "English" else "🟢 利好"
-                elif sentiment_val == 'Negative':
-                    badge_color = "red"
-                    sent_text = "🔴 Bearish" if lang == "English" else "🔴 利空"
-                else:
-                    badge_color = "blue"
-                    sent_text = "⚪ Neutral" if lang == "English" else "⚪ 中立"
-                    
-                # Create tag badges (translate if needed)
-                def translate_tag(t):
-                    if lang == "中文":
-                        if t in TOPICS: return TOPICS_ZH.get(t, t)
-                        if t in REGIONS: return REGIONS_ZH.get(t, t)
-                    return t
-                    
-                tags = row['Topics'] + row['Companies'] + row['Regions']
-                tag_str = " ".join([f"`{translate_tag(t)}`" for t in tags]) if tags else ""
+            # Prepare translated options for selectboxes
+            def get_display_opts(keys_list, zh_dict):
+                if lang == "中文":
+                    return [ui["all"][lang]] + [zh_dict.get(k, k) for k in keys_list]
+                return [ui["all"][lang]] + keys_list
                 
-                with st.expander(f"{sent_text} | **{row['Title']}**"):
-                    col_info1, col_info2 = st.columns([3, 1])
-                    with col_info1:
-                        if tag_str:
-                            st.markdown(f"**{ui['tags'][lang]}:** {tag_str}")
-                        st.markdown(f"**{ui['summary'][lang]}:**")
-                        st.write(row['Summary'])
-                    with col_info2:
-                        st.markdown(f"**{ui['published'][lang]}:**<br>{row['Date_Str']}", unsafe_allow_html=True)
-                        st.markdown(f"**{ui['source'][lang]}:**<br>{row['Source']}", unsafe_allow_html=True)
-                        st.markdown(f"<br>**[{ui['read_more'][lang]}]({row['Link']})**", unsafe_allow_html=True)
-                        
-        with main_tab2:
-            # --- Visualizations ---
-            st.subheader("📊 Analytics Dashboard")
-            tab1, tab2, tab3 = st.tabs(["Sentiment & Keywords", "Domain & Company Distribution", "Time & Sources"])
+            time_opts_display = get_display_opts(list(TIME_RANGES.keys()), TIME_RANGES_ZH)
+            selected_time_display = st.selectbox("Time", time_opts_display, label_visibility="collapsed")
+            # Map back to internal key
+            selected_time = list(TIME_RANGES.keys())[time_opts_display.index(selected_time_display) - 1] if selected_time_display != ui["all"][lang] else ui["all"][lang]
             
-            with tab1:
-                col_chart1, col_chart2 = st.columns(2)
-                with col_chart1:
-                    sentiment_counts = filtered_df['Sentiment'].value_counts().reset_index()
-                    sentiment_counts.columns = ['Sentiment', 'Count']
-                    if lang == "中文":
-                        sentiment_map = {'Positive': '积极', 'Neutral': '中立', 'Negative': '消极'}
-                        sentiment_counts['Sentiment'] = sentiment_counts['Sentiment'].map(sentiment_map)
-                        color_map = {'积极':'#00CC96', '中立':'#636EFA', '消极':'#EF553B'}
+            st.markdown("---")
+            
+            # Topic & Company Filters
+            st.markdown(f"**{ui['topic_filter'][lang]} & {ui['company_filter'][lang]}**")
+            topic_opts_display = get_display_opts(TOPICS, TOPICS_ZH)
+            selected_topic_display = st.selectbox("Topic", topic_opts_display, label_visibility="collapsed")
+            selected_topic = TOPICS[topic_opts_display.index(selected_topic_display) - 1] if selected_topic_display != ui["all"][lang] else ui["all"][lang]
+            
+            selected_company = st.selectbox("Company", [ui["all"][lang]] + COMPANIES, label_visibility="collapsed")
+                
+            st.markdown("---")
+            
+            # Region & Source Type Filters
+            st.markdown(f"**{ui['region_filter'][lang]} & {ui['source_type_filter'][lang]}**")
+            
+            region_opts_display = get_display_opts(REGIONS, REGIONS_ZH)
+            selected_region_display = st.selectbox("Region", region_opts_display, label_visibility="collapsed")
+            selected_region = REGIONS[region_opts_display.index(selected_region_display) - 1] if selected_region_display != ui["all"][lang] else ui["all"][lang]
+            
+            source_type_opts_display = get_display_opts(SOURCE_TYPES, SOURCE_TYPES_ZH)
+            selected_source_type_display = st.selectbox("Source", source_type_opts_display, label_visibility="collapsed")
+            selected_source_type = SOURCE_TYPES[source_type_opts_display.index(selected_source_type_display) - 1] if selected_source_type_display != ui["all"][lang] else ui["all"][lang]
+            
+            st.markdown("---")
+            if st.button("Reset Filters" if lang == "English" else "重置所有筛选"):
+                st.rerun()
+
+        # --- Main Area Search & Sort ---
+        col_search, col_sort = st.columns([3, 1], vertical_alignment="bottom")
+        with col_search:
+            search_query = st.text_input("Search", placeholder=ui["search"][lang], label_visibility="collapsed")
+        with col_sort:
+            sort_options = [ui["sort_time_desc"][lang], ui["sort_time_asc"][lang], ui["sort_sentiment"][lang]]
+            selected_sort = st.selectbox("Sort", sort_options, label_visibility="collapsed")
+
+        # --- Apply Filters ---
+        filtered_df = df_news.copy()
+        
+        if search_query:
+            search_mask = filtered_df['Title_EN'].str.contains(search_query, case=False, na=False) | \
+                          filtered_df['Title'].str.contains(search_query, case=False, na=False)
+            filtered_df = filtered_df[search_mask]
+            
+        if selected_topic != ui["all"][lang]:
+            filtered_df = filtered_df[filtered_df['Topics'].apply(lambda x: selected_topic in x)]
+            
+        if selected_company != ui["all"][lang]:
+            filtered_df = filtered_df[filtered_df['Companies'].apply(lambda x: selected_company in x)]
+            
+        if selected_region != ui["all"][lang]:
+            filtered_df = filtered_df[filtered_df['Regions'].apply(lambda x: selected_region in x)]
+            
+        if selected_source_type != ui["all"][lang]:
+            filtered_df = filtered_df[filtered_df['Source_Type'] == selected_source_type]
+            
+        if selected_time != ui["all"][lang]:
+            days_limit = TIME_RANGES[selected_time]
+            cutoff_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days_limit)
+            
+            # Ensure timezone awareness for comparison
+            def check_date(d):
+                if d.tzinfo is None:
+                    d = d.replace(tzinfo=datetime.timezone.utc)
+                return d >= cutoff_date
+                
+            filtered_df = filtered_df[filtered_df['Published_Date'].apply(check_date)]
+            
+        # Apply Sorting
+        if selected_sort == ui["sort_time_desc"][lang]:
+            filtered_df = filtered_df.sort_values(by='Published_Date', ascending=False)
+        elif selected_sort == ui["sort_time_asc"][lang]:
+            filtered_df = filtered_df.sort_values(by='Published_Date', ascending=True)
+        elif selected_sort == ui["sort_sentiment"][lang]:
+            filtered_df = filtered_df.sort_values(by='Sentiment_Score', ascending=False)
+
+        # --- Metrics Section ---
+        col1, col2, col3 = st.columns(3)
+        col1.metric(ui["total_news"][lang], len(filtered_df))
+        
+        if not filtered_df.empty:
+            avg_score = filtered_df['Sentiment_Score'].mean()
+            if avg_score > 0.1: trend = ui["bullish"][lang]
+            elif avg_score < -0.1: trend = ui["bearish"][lang]
+            else: trend = ui["neutral"][lang]
+        else:
+            avg_score = 0.0
+            trend = ui["neutral"][lang]
+            
+        col2.metric(ui["sentiment"][lang], trend, f"{avg_score:.2f} Score")
+        col3.metric(ui["trending"][lang], top_keywords[0][0].capitalize() if top_keywords else "N/A")
+        
+        st.divider()
+        
+
+    if not filtered_df.empty:
+        if selected_page == ui["tab_news"][lang]:
+                # --- Top Headlines Section ---
+                # Show top 3 most important articles based on recency and sentiment
+                # We filter for 'Positive' or 'Neutral' and sort by Date first, then Sentiment
+                positive_news = filtered_df[filtered_df['Sentiment'] != 'Negative'].sort_values(
+                    by=['Published_Date', 'Sentiment_Score'], ascending=[False, False]
+                )
+                if not positive_news.empty:
+                    st.subheader(ui["top_headlines"][lang])
+                    cols = st.columns(min(3, len(positive_news)))
+                    for idx, (i, row) in enumerate(positive_news.head(3).iterrows()):
+                        with cols[idx]:
+                            with st.container(border=True):
+                                st.markdown(f"##### {row['Title']}")
+                                st.caption(f"{row['Source']} • {row['Date_Str']}")
+                                st.markdown(f"**[{ui['read_more'][lang]}]({row['Link']})**")
+                    st.markdown("---")
+
+                # --- Expandable News Feed ---
+                st.subheader(ui["table_title"][lang])
+                
+                for idx, row in filtered_df.iterrows():
+                    sentiment_val = row['Sentiment']
+                    if sentiment_val == 'Positive':
+                        badge_color = "green"
+                        sent_text = "🟢 Bullish" if lang == "English" else "🟢 利好"
+                    elif sentiment_val == 'Negative':
+                        badge_color = "red"
+                        sent_text = "🔴 Bearish" if lang == "English" else "🔴 利空"
                     else:
-                        color_map = {'Positive':'#00CC96', 'Neutral':'#636EFA', 'Negative':'#EF553B'}
+                        badge_color = "blue"
+                        sent_text = "⚪ Neutral" if lang == "English" else "⚪ 中立"
                         
-                    fig_sentiment = px.pie(
-                        sentiment_counts, names='Sentiment', values='Count',
-                        color='Sentiment', color_discrete_map=color_map, hole=0.4,
-                        title=ui["sentiment_chart"][lang]
-                    )
-                    fig_sentiment.update_layout(margin=dict(t=40, b=0, l=0, r=0))
-                    st.plotly_chart(fig_sentiment, use_container_width=True)
-                    
-                with col_chart2:
-                    # Generate WordCloud
-                    if all_keywords_text.strip():
-                        st.markdown(f"**{ui['wordcloud_chart'][lang]}**")
-                        wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='Blues', max_words=50).generate(all_keywords_text)
-                        fig_wc, ax = plt.subplots(figsize=(8, 4))
-                        ax.imshow(wordcloud, interpolation='bilinear')
-                        ax.axis('off')
-                        # Reduce padding
-                        plt.tight_layout(pad=0)
-                        st.pyplot(fig_wc)
-                        
-            with tab2:
-                col_chart5, col_chart6 = st.columns(2)
-                
-                with col_chart5:
-                    # Extract and count topics
-                    all_topics = [t for sublist in filtered_df['Topics'] for t in sublist]
-                    if all_topics:
-                        topic_counts = Counter(all_topics).most_common(10)
-                        # Translate topics for the chart if in Chinese mode
+                    # Create tag badges (translate if needed)
+                    def translate_tag(t):
                         if lang == "中文":
-                            topic_counts = [(TOPICS_ZH.get(t, t), c) for t, c in topic_counts]
-                            
-                        df_topics = pd.DataFrame(topic_counts, columns=['Topic', 'Count']).sort_values(by='Count', ascending=True)
-                        fig_topics = px.bar(
-                            df_topics, x='Count', y='Topic', orientation='h',
-                            title=ui["topic_dist_chart"][lang],
-                            color='Count', color_continuous_scale=px.colors.sequential.Purples
-                        )
-                        fig_topics.update_layout(margin=dict(t=40, b=0, l=0, r=0))
-                        st.plotly_chart(fig_topics, use_container_width=True)
-                    else:
-                        st.info("No topic data available for current filter." if lang == "English" else "当前筛选条件下无主题数据。")
+                            if t in TOPICS: return TOPICS_ZH.get(t, t)
+                            if t in REGIONS: return REGIONS_ZH.get(t, t)
+                        return t
                         
-                with col_chart6:
-                    # Extract and count companies
-                    all_comps = [c for sublist in filtered_df['Companies'] for c in sublist]
-                    if all_comps:
-                        comp_counts = Counter(all_comps).most_common(10)
-                        df_comps = pd.DataFrame(comp_counts, columns=['Company', 'Count']).sort_values(by='Count', ascending=True)
-                        fig_comps = px.bar(
-                            df_comps, x='Count', y='Company', orientation='h',
-                            title=ui["company_mentions_chart"][lang],
-                            color='Count', color_continuous_scale=px.colors.sequential.Oranges
+                    tags = row['Topics'] + row['Companies'] + row['Regions']
+                    tag_str = " ".join([f"`{translate_tag(t)}`" for t in tags]) if tags else ""
+                    
+                    with st.expander(f"{sent_text} | **{row['Title']}**"):
+                        col_info1, col_info2 = st.columns([3, 1])
+                        with col_info1:
+                            if tag_str:
+                                st.markdown(f"**{ui['tags'][lang]}:** {tag_str}")
+                            st.markdown(f"**{ui['summary'][lang]}:**")
+                            st.write(row['Summary'])
+                        with col_info2:
+                            st.markdown(f"**{ui['published'][lang]}:**<br>{row['Date_Str']}", unsafe_allow_html=True)
+                            st.markdown(f"**{ui['source'][lang]}:**<br>{row['Source']}", unsafe_allow_html=True)
+                            st.markdown(f"<br>**[{ui['read_more'][lang]}]({row['Link']})**", unsafe_allow_html=True)
+                            
+        elif selected_page == ui["tab_analytics"][lang]:
+                # --- Visualizations ---
+                st.subheader("📊 Analytics Dashboard")
+                tab1, tab2, tab3 = st.tabs(["Sentiment & Keywords", "Domain & Company Distribution", "Time & Sources"])
+                
+                with tab1:
+                    col_chart1, col_chart2 = st.columns(2)
+                    with col_chart1:
+                        sentiment_counts = filtered_df['Sentiment'].value_counts().reset_index()
+                        sentiment_counts.columns = ['Sentiment', 'Count']
+                        if lang == "中文":
+                            sentiment_map = {'Positive': '积极', 'Neutral': '中立', 'Negative': '消极'}
+                            sentiment_counts['Sentiment'] = sentiment_counts['Sentiment'].map(sentiment_map)
+                            color_map = {'积极':'#00CC96', '中立':'#636EFA', '消极':'#EF553B'}
+                        else:
+                            color_map = {'Positive':'#00CC96', 'Neutral':'#636EFA', 'Negative':'#EF553B'}
+                            
+                        fig_sentiment = px.pie(
+                            sentiment_counts, names='Sentiment', values='Count',
+                            color='Sentiment', color_discrete_map=color_map, hole=0.4,
+                            title=ui["sentiment_chart"][lang]
                         )
-                        fig_comps.update_layout(margin=dict(t=40, b=0, l=0, r=0))
-                        st.plotly_chart(fig_comps, use_container_width=True)
-                    else:
-                        st.info("No company data available for current filter." if lang == "English" else "当前筛选条件下无公司提及数据。")
+                        fig_sentiment.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                        st.plotly_chart(fig_sentiment, use_container_width=True)
+                        
+                    with col_chart2:
+                        # Generate WordCloud
+                        if all_keywords_text.strip():
+                            st.markdown(f"**{ui['wordcloud_chart'][lang]}**")
+                            wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='Blues', max_words=50).generate(all_keywords_text)
+                            fig_wc, ax = plt.subplots(figsize=(8, 4))
+                            ax.imshow(wordcloud, interpolation='bilinear')
+                            ax.axis('off')
+                            # Reduce padding
+                            plt.tight_layout(pad=0)
+                            st.pyplot(fig_wc)
+                            
+                with tab2:
+                    col_chart5, col_chart6 = st.columns(2)
+                    
+                    with col_chart5:
+                        # Extract and count topics
+                        all_topics = [t for sublist in filtered_df['Topics'] for t in sublist]
+                        if all_topics:
+                            topic_counts = Counter(all_topics).most_common(10)
+                            # Translate topics for the chart if in Chinese mode
+                            if lang == "中文":
+                                topic_counts = [(TOPICS_ZH.get(t, t), c) for t, c in topic_counts]
+                                
+                            df_topics = pd.DataFrame(topic_counts, columns=['Topic', 'Count']).sort_values(by='Count', ascending=True)
+                            fig_topics = px.bar(
+                                df_topics, x='Count', y='Topic', orientation='h',
+                                title=ui["topic_dist_chart"][lang],
+                                color='Count', color_continuous_scale=px.colors.sequential.Purples
+                            )
+                            fig_topics.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                            st.plotly_chart(fig_topics, use_container_width=True)
+                        else:
+                            st.info("No topic data available for current filter." if lang == "English" else "当前筛选条件下无主题数据。")
+                            
+                    with col_chart6:
+                        # Extract and count companies
+                        all_comps = [c for sublist in filtered_df['Companies'] for c in sublist]
+                        if all_comps:
+                            comp_counts = Counter(all_comps).most_common(10)
+                            df_comps = pd.DataFrame(comp_counts, columns=['Company', 'Count']).sort_values(by='Count', ascending=True)
+                            fig_comps = px.bar(
+                                df_comps, x='Count', y='Company', orientation='h',
+                                title=ui["company_mentions_chart"][lang],
+                                color='Count', color_continuous_scale=px.colors.sequential.Oranges
+                            )
+                            fig_comps.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                            st.plotly_chart(fig_comps, use_container_width=True)
+                        else:
+                            st.info("No company data available for current filter." if lang == "English" else "当前筛选条件下无公司提及数据。")
 
-            with tab3:
-                col_chart3, col_chart4 = st.columns(2)
-                with col_chart3:
-                    time_counts = filtered_df.groupby('Day').size().reset_index(name='Count')
-                    fig_time = px.line(
-                        time_counts, x='Day', y='Count', markers=True,
-                        title=ui["time_chart"][lang],
-                        color_discrete_sequence=['#FF7F0E']
-                    )
-                    fig_time.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
-                    st.plotly_chart(fig_time, use_container_width=True)
-                    
-                with col_chart4:
-                    source_counts = filtered_df['Source'].value_counts().head(10).reset_index()
-                    source_counts.columns = ['Source', 'Count']
-                    fig_source = px.bar(
-                        source_counts, x='Source', y='Count',
-                        title=ui["source_chart"][lang],
-                        color='Count', color_continuous_scale=px.colors.sequential.Teal
-                    )
-                    fig_source.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
-                    st.plotly_chart(fig_source, use_container_width=True)
-                    
-        with main_tab3:
-            st.subheader(ui["tab_glossary"][lang])
-            st.markdown(ui["glossary_intro"][lang])
-            
-            # --- Daily Word of the Day ---
-            # Use current date as random seed so it changes only once per day
-            today = datetime.datetime.now().date()
-            random.seed(today.toordinal())
-            
-            # Flatten glossary to pick a random term
-            flat_glossary = []
-            for category, terms in STRUCTURED_GLOSSARY.items():
-                for term, desc in terms.items():
-                    flat_glossary.append((category, term, desc))
-            
-            daily_cat, daily_term, daily_desc = random.choice(flat_glossary)
-            
-            # Initialize session state for tracking learning progress
-            if 'learned_words' not in st.session_state:
-                st.session_state.learned_words = set()
-            
-            st.markdown("---")
-            st.markdown(f"### {ui['word_of_day'][lang]} ({today.strftime('%b %d, %Y')})")
-            with st.container(border=True):
-                st.markdown(f"#### {daily_term}")
-                cat_en, cat_zh = daily_cat.split(" / ")
-                st.caption(f"Category: {cat_zh if lang == '中文' else cat_en}")
-                st.info(daily_desc[lang])
-                
-                # Check if the user has marked it as learned today
-                if daily_term not in st.session_state.learned_words:
-                    if st.button(ui["mark_learned"][lang], key="btn_learn_daily", type="primary"):
-                        st.session_state.learned_words.add(daily_term)
-                        st.balloons()
-                        st.rerun()
-                else:
-                    st.success(ui["learned_success"][lang])
-                    
-            st.markdown("---")
-            st.markdown("### 📚 Browse the Full Dictionary")
-            
-            search_term = st.text_input("🔍 Search terms / 搜索名词", key="glossary_search").strip()
-            
-            for category, terms in STRUCTURED_GLOSSARY.items():
-                # Extract localized category name
-                cat_en, cat_zh = category.split(" / ")
-                display_cat = cat_zh if lang == "中文" else cat_en
-                
-                # Filter terms in this category based on search
-                matching_terms = {}
-                for term, desc in terms.items():
-                    if not search_term or search_term.lower() in term.lower() or search_term.lower() in desc[lang].lower():
-                        matching_terms[term] = desc
+                with tab3:
+                    col_chart3, col_chart4 = st.columns(2)
+                    with col_chart3:
+                        time_counts = filtered_df.groupby('Day').size().reset_index(name='Count')
+                        fig_time = px.line(
+                            time_counts, x='Day', y='Count', markers=True,
+                            title=ui["time_chart"][lang],
+                            color_discrete_sequence=['#FF7F0E']
+                        )
+                        fig_time.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
+                        st.plotly_chart(fig_time, use_container_width=True)
                         
-                # If there are matches, display the category header and the terms
-                if matching_terms:
-                    st.markdown(f"#### {display_cat}")
-                    for term, desc in matching_terms.items():
-                        with st.expander(f"**{term}**"):
-                            st.write(desc[lang])
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    
-        with main_tab4:
-            st.subheader(ui["tab_career"][lang])
-            st.markdown("Explore emerging AI roles, required skills, and common interview questions to prepare for your next career move." if lang == "English" else "探索新兴的 AI 岗位、核心技能树以及常见的面试题，为你的下一次职业飞跃做好准备。")
-            st.markdown("---")
-            
-            for role, data in CAREER_GUIDE.items():
-                role_en, role_zh = role.split(" / ")
-                display_role = role_zh if lang == "中文" else role_en
-                
-                with st.expander(f"**{display_role}**", expanded=False):
-                    st.info(data["desc"][lang])
-                    
-                    col_sk, col_iq = st.columns(2)
-                    with col_sk:
-                        st.markdown("**🛠️ Core Skills / 核心技能树**" if lang == "中文" else "**🛠️ Core Skills**")
-                        for skill in data["skills"][lang]:
-                            st.markdown(f"- {skill}")
-                            
-                    with col_iq:
-                        st.markdown("**❓ Mock Interview / 模拟面试题**" if lang == "中文" else "**❓ Mock Interview**")
-                        for q in data["interview_q"][lang]:
-                            st.markdown(f"- {q}")
-                            
-        with main_tab5:
-            st.subheader(ui["tab_cases"][lang])
-            st.markdown("Learn how AI is solving real-world business problems across different industries." if lang == "English" else "了解 AI 技术是如何在不同行业的真实业务场景中解决痛点并创造商业价值的。")
-            st.markdown("---")
-            
-            for industry, cases in BUSINESS_CASES.items():
-                ind_en, ind_zh = industry.split(" / ")
-                display_ind = ind_zh if lang == "中文" else ind_en
-                
-                st.markdown(f"#### {display_ind}")
-                
-                for case in cases:
-                    with st.expander(f"**{case['title'][lang]}**", expanded=False):
-                        st.markdown("**🚨 Problem / 业务痛点:**" if lang == "English" else "**🚨 业务痛点:**")
-                        st.write(case['problem'][lang])
-                        st.markdown("**💡 AI Solution / AI 解决方案:**" if lang == "English" else "**💡 AI 解决方案:**")
-                        st.info(case['solution'][lang])
-                        st.markdown("**📈 Business Impact / 商业价值:**" if lang == "English" else "**📈 商业价值:**")
-                        st.success(case['impact'][lang])
-                st.markdown("<br>", unsafe_allow_html=True)
-            
+                    with col_chart4:
+                        source_counts = filtered_df['Source'].value_counts().head(10).reset_index()
+                        source_counts.columns = ['Source', 'Count']
+                        fig_source = px.bar(
+                            source_counts, x='Source', y='Count',
+                            title=ui["source_chart"][lang],
+                            color='Count', color_continuous_scale=px.colors.sequential.Teal
+                        )
+                        fig_source.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
+                        st.plotly_chart(fig_source, use_container_width=True)
+                        
     else:
         st.warning(ui["no_data"][lang])
-else:
-    st.warning(ui["no_data"][lang])
+elif selected_page == ui["tab_glossary"][lang]:
+    st.subheader(ui["tab_glossary"][lang])
+    st.markdown(ui["glossary_intro"][lang])
+    
+    # --- Daily Word of the Day ---
+    # Use current date as random seed so it changes only once per day
+    today = datetime.datetime.now().date()
+    random.seed(today.toordinal())
+    
+    # Flatten glossary to pick a random term
+    flat_glossary = []
+    for category, terms in STRUCTURED_GLOSSARY.items():
+        for term, desc in terms.items():
+            flat_glossary.append((category, term, desc))
+    
+    daily_cat, daily_term, daily_desc = random.choice(flat_glossary)
+    
+    # Initialize session state for tracking learning progress
+    if 'learned_words' not in st.session_state:
+        st.session_state.learned_words = set()
+    
+    st.markdown("---")
+    st.markdown(f"### {ui['word_of_day'][lang]} ({today.strftime('%b %d, %Y')})")
+    with st.container(border=True):
+        st.markdown(f"#### {daily_term}")
+        cat_en, cat_zh = daily_cat.split(" / ")
+        st.caption(f"Category: {cat_zh if lang == '中文' else cat_en}")
+        st.info(daily_desc[lang])
+        
+        # Check if the user has marked it as learned today
+        if daily_term not in st.session_state.learned_words:
+            if st.button(ui["mark_learned"][lang], key="btn_learn_daily", type="primary"):
+                st.session_state.learned_words.add(daily_term)
+                st.balloons()
+                st.rerun()
+        else:
+            st.success(ui["learned_success"][lang])
+            
+    st.markdown("---")
+    st.markdown("### 📚 Browse the Full Dictionary")
+    
+    search_term = st.text_input("🔍 Search terms / 搜索名词", key="glossary_search").strip()
+    
+    for category, terms in STRUCTURED_GLOSSARY.items():
+        # Extract localized category name
+        cat_en, cat_zh = category.split(" / ")
+        display_cat = cat_zh if lang == "中文" else cat_en
+        
+        # Filter terms in this category based on search
+        matching_terms = {}
+        for term, desc in terms.items():
+            if not search_term or search_term.lower() in term.lower() or search_term.lower() in desc[lang].lower():
+                matching_terms[term] = desc
+                
+        # If there are matches, display the category header and the terms
+        if matching_terms:
+            st.markdown(f"#### {display_cat}")
+            for term, desc in matching_terms.items():
+                with st.expander(f"**{term}**"):
+                    st.write(desc[lang])
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+elif selected_page == ui["tab_career"][lang]:
+    st.subheader(ui["tab_career"][lang])
+    st.markdown("Explore emerging AI roles, required skills, and common interview questions to prepare for your next career move." if lang == "English" else "探索新兴的 AI 岗位、核心技能树以及常见的面试题，为你的下一次职业飞跃做好准备。")
+    st.markdown("---")
+    
+    for role, data in CAREER_GUIDE.items():
+        role_en, role_zh = role.split(" / ")
+        display_role = role_zh if lang == "中文" else role_en
+        
+        with st.expander(f"**{display_role}**", expanded=False):
+            st.info(data["desc"][lang])
+            
+            col_sk, col_iq = st.columns(2)
+            with col_sk:
+                st.markdown("**🛠️ Core Skills / 核心技能树**" if lang == "中文" else "**🛠️ Core Skills**")
+                for skill in data["skills"][lang]:
+                    st.markdown(f"- {skill}")
+                    
+            with col_iq:
+                st.markdown("**❓ Mock Interview / 模拟面试题**" if lang == "中文" else "**❓ Mock Interview**")
+                for q in data["interview_q"][lang]:
+                    st.markdown(f"- {q}")
+                    
+elif selected_page == ui["tab_cases"][lang]:
+    st.subheader(ui["tab_cases"][lang])
+    st.markdown("Learn how AI is solving real-world business problems across different industries." if lang == "English" else "了解 AI 技术是如何在不同行业的真实业务场景中解决痛点并创造商业价值的。")
+    st.markdown("---")
+    
+    for industry, cases in BUSINESS_CASES.items():
+        ind_en, ind_zh = industry.split(" / ")
+        display_ind = ind_zh if lang == "中文" else ind_en
+        
+        st.markdown(f"#### {display_ind}")
+        
+        for case in cases:
+            with st.expander(f"**{case['title'][lang]}**", expanded=False):
+                st.markdown("**🚨 Problem / 业务痛点:**" if lang == "English" else "**🚨 业务痛点:**")
+                st.write(case['problem'][lang])
+                st.markdown("**💡 AI Solution / AI 解决方案:**" if lang == "English" else "**💡 AI 解决方案:**")
+                st.info(case['solution'][lang])
+                st.markdown("**📈 Business Impact / 商业价值:**" if lang == "English" else "**📈 商业价值:**")
+                st.success(case['impact'][lang])
+        st.markdown("<br>", unsafe_allow_html=True)
+    
