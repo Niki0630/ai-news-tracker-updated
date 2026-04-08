@@ -98,23 +98,30 @@ TIME_RANGES = {
     "Last 7 Days": 7
 }
 
-# RSS Feeds List (Minimal Set)
+# RSS Feeds List (Expanded Set for more volume)
 RSS_FEEDS = [
-    # Google News (Mixed EN/CN)
+    # Google News (Mixed EN/CN) - Increased queries for more volume
     {"url": "https://news.google.com/rss/search?q=%E6%99%BA%E8%83%BD%E4%BB%A3%E7%90%86%20OR%20AI%20Agent&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
     {"url": "https://news.google.com/rss/search?q=%E5%BC%80%E6%BA%90%20%E6%A8%A1%E5%9E%8B%20OR%20open-source%20model&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
     {"url": "https://news.google.com/rss/search?q=AI%20%E8%8A%AF%E7%89%87%20OR%20NVIDIA%20GPU&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=%E5%8C%BB%E7%96%97%20AI%20OR%20medical%20AI&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
+    {"url": "https://news.google.com/rss/search?q=%E8%87%AA%E5%8A%A8%E9%A9%BE%E9%A9%B6%20OR%20robotaxi&hl=zh-CN&gl=US&ceid=US:zh-Hans", "source": "Google News (ZH)"},
     {"url": "https://news.google.com/rss/search?q=AI%20Act%20OR%20regulation&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
     {"url": "https://news.google.com/rss/search?q=AI%20funding%20OR%20Series%20A&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=OpenAI%20OR%20ChatGPT&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=Anthropic%20OR%20Claude&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
+    {"url": "https://news.google.com/rss/search?q=Google%20DeepMind%20AI&hl=en-US&gl=US&ceid=US:en", "source": "Google News (EN)"},
     
     # Hacker News
     {"url": "https://hnrss.org/newest?q=AI%20agent", "source": "Hacker News"},
     {"url": "https://hnrss.org/newest?q=OpenAI", "source": "Hacker News"},
     {"url": "https://hnrss.org/newest?q=NVIDIA", "source": "Hacker News"},
+    {"url": "https://hnrss.org/newest?q=Llama%20OR%20open-source", "source": "Hacker News"},
     
     # arXiv (Research Papers)
+    {"url": "https://export.arxiv.org/rss/cs.AI", "source": "arXiv (AI)"},
     {"url": "https://export.arxiv.org/rss/cs.LG", "source": "arXiv (Machine Learning)"},
-    {"url": "https://export.arxiv.org/rss/cs.RO", "source": "arXiv (Robotics)"}
+    {"url": "https://export.arxiv.org/rss/cs.CL", "source": "arXiv (Computation and Language)"}
 ]
 
 # Simple rule-based tagger replacing GPT for speed & cost in this dashboard
@@ -162,14 +169,32 @@ def fetch_single_feed(feed_info):
     feed = feedparser.parse(feed_url)
     items = []
     
-    # Limit items per feed to avoid overloading the dashboard (e.g., max 15 per feed)
-    for entry in feed.entries[:15]:
+    # Increase limit to 30 items per feed to get much more volume
+    for entry in feed.entries[:30]:
         title = BeautifulSoup(entry.title, "html.parser").get_text()
         
+        # 1. Try to get summary from summary field
         summary_html = entry.get('summary', '')
-        summary_text = BeautifulSoup(summary_html, "html.parser").get_text()
+        summary_text = BeautifulSoup(summary_html, "html.parser").get_text().strip()
+        
+        # 2. Try to get content if summary is empty or too short
+        if not summary_text or len(summary_text) < 50:
+            if hasattr(entry, 'content') and len(entry.content) > 0:
+                content_html = entry.content[0].value
+                summary_text = BeautifulSoup(content_html, "html.parser").get_text().strip()
+                
+        # 3. Try description field
+        if not summary_text or len(summary_text) < 50:
+             if hasattr(entry, 'description'):
+                 summary_text = BeautifulSoup(entry.description, "html.parser").get_text().strip()
+                 
+        # 4. Clean up Google News specific boilerplate (e.g., "Read full article on...")
+        summary_text = re.sub(r'Read full article on.*?$', '', summary_text, flags=re.IGNORECASE)
+        summary_text = re.sub(r'Read more.*?$', '', summary_text, flags=re.IGNORECASE)
+        
+        # Fallback if still empty
         if not summary_text or summary_text == title:
-             summary_text = f"Read the full article at the source link."
+             summary_text = f"An article discussing {title}. Click the link to read the full details at the source."
              
         try:
             pub_date = date_parser.parse(entry.published)
@@ -180,7 +205,8 @@ def fetch_single_feed(feed_info):
         
         items.append({
             "Title_EN": title,
-            "Summary_EN": summary_text[:300] + "..." if len(summary_text) > 300 else summary_text,
+            # Give a generous length for the summary, but cap at 500 chars to keep UI clean
+            "Summary_EN": summary_text[:500] + "..." if len(summary_text) > 500 else summary_text,
             "Link": entry.link,
             "Published_Date": pub_date,
             "Source": source_name,
@@ -209,34 +235,53 @@ def fetch_all_news():
 
 # --- Translate Data ---
 @st.cache_data(ttl=1800)
-def translate_texts(texts):
-    translator = GoogleTranslator(source='auto', target='zh-CN')
+def translate_texts(texts, target_lang):
+    if not texts:
+        return texts
+    
+    # We create a new translator instance per call to avoid state issues
+    # When target_lang is 'en', we translate TO English (for Chinese sources)
+    # When target_lang is 'zh-CN', we translate TO Chinese (for English sources)
+    translator = GoogleTranslator(source='auto', target=target_lang)
     translated = []
-    chunk_size = 20 
+    
+    # Smaller chunk size for better stability
+    chunk_size = 10 
     
     for i in range(0, len(texts), chunk_size):
         chunk = texts[i:i+chunk_size]
         delimiter = " |^^| "
         combined_text = delimiter.join(chunk)
+        
         try:
-            if i > 0: time.sleep(0.5)
+            # Give Google API a respectful pause
+            if i > 0: time.sleep(1.0) 
+            
             trans_combined = translator.translate(combined_text)
+            
             if trans_combined:
                 parts = re.split(r'\s*\|\^\^\|\s*', trans_combined)
                 if len(parts) == len(chunk):
                     translated.extend(parts)
                 else:
+                    # Fallback to 1-by-1 if delimiter split fails
                     for t in chunk:
-                        translated.append(translator.translate(t))
+                        try:
+                            time.sleep(0.2)
+                            translated.append(translator.translate(t))
+                        except:
+                            translated.append(t)
             else:
                  translated.extend(chunk)
         except Exception as e:
+            # Fallback to 1-by-1 if batch fails
             for t in chunk:
                 try:
-                    time.sleep(0.1)
+                    time.sleep(0.3)
                     translated.append(translator.translate(t))
                 except:
                     translated.append(t)
+                    
     return translated
 
 # --- Analyze Data ---
@@ -282,11 +327,14 @@ if not df_news.empty:
     
     if lang == "中文":
         with st.spinner(ui["translating"][lang]):
-            df_news["Title"] = translate_texts(df_news["Title_EN"].tolist())
+            # Only translate English titles to Chinese
+            df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'zh-CN')
             df_news["Summary"] = df_news["Summary_EN"] 
     else:
-        df_news["Title"] = df_news["Title_EN"]
-        df_news["Summary"] = df_news["Summary_EN"]
+        with st.spinner("Translating Chinese sources to English..."):
+            # Translate Chinese titles to English to keep the English UI consistent
+            df_news["Title"] = translate_texts(df_news["Title_EN"].tolist(), 'en')
+            df_news["Summary"] = df_news["Summary_EN"]
         
     # --- Sidebar Filters & Search ---
     with st.sidebar:
