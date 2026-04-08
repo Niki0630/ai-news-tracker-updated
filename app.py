@@ -16,13 +16,13 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
 # --- Config ---
-st.set_page_config(page_title="AI Career Navigator", layout="wide", page_icon="🧭")
+st.set_page_config(page_title="AI Morning Coffee", layout="wide", page_icon="☕")
 
 # --- UI Dictionary ---
 ui = {
-    "title": {"English": "🧭 AI Career Navigator", "中文": "🧭 AI 转型领航员"},
-    "desc": {"English": "Your ultimate hub for real-time AI news, industry insights, and career transition resources. Master the concepts, ace the interview, and land your dream AI job.", 
-             "中文": "专为 AI 转型求职者打造的一站式超级基站：聚合全球实时资讯、拆解硬核技术概念、透视真实商业落地，助你全副武装拿下心仪的 AI 岗位。"},
+    "title": {"English": "☕ AI Morning Coffee", "中文": "☕ AI 早咖啡"},
+    "desc": {"English": "Brewing the latest AI trends to kickstart a brand new day, and empowering every job seeker to unlock a brand new career and life.", 
+             "中文": "为您萃取全球最新的 AI 动态，用前沿科技「为您打开全新的一天」，更助力每一位求职者「打开全新的人生」。"},
     "scraping": {"English": "Fetching from multiple RSS sources (This may take a moment)...", "中文": "正在从多个数据源拉取最新资讯 (可能需要稍等片刻)..."},
     "translating": {"English": "Translating news to Chinese...", "中文": "正在将新闻翻译为中文 (首次加载可能需要几秒钟)..."},
     "total_news": {"English": "📰 Total Articles", "中文": "📰 近期抓取文章总数"},
@@ -73,7 +73,7 @@ ui = {
 
 # --- Navigation & Language ---
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/000000/compass.png", width=60)
+    st.image("https://img.icons8.com/color/96/000000/cafe.png", width=60)
     lang = st.radio("Language / 语言", ["中文", "English"], label_visibility="collapsed")
     st.divider()
     
