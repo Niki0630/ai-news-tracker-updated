@@ -70,6 +70,7 @@ ui = {
     "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"},
     "tab_glossary": {"English": "📖 AI Glossary & Learning", "中文": "📖 AI 概念科普与学习"},
     "tab_career": {"English": "💼 Career & Interview Guide", "中文": "💼 岗位技能与面试指南"},
+    "tab_cases": {"English": "💡 Business Case Studies", "中文": "💡 商业落地案例库"},
     "glossary_intro": {"English": "Transitioning to AI? Master the core concepts to decode industry news and job descriptions.", "中文": "准备转型 AI 领域求职？掌握这些核心概念与行话，助你快速看懂行业新闻与招聘要求。"},
     "word_of_day": {"English": "🌟 Word of the Day", "中文": "🌟 每日一词推荐"},
     "mark_learned": {"English": "✅ I've mastered this!", "中文": "✅ 我已掌握，今日打卡！"},
@@ -342,6 +343,52 @@ CAREER_GUIDE = {
             ]
         }
     }
+}
+
+# --- Business Case Studies Data ---
+BUSINESS_CASES = {
+    "1. E-commerce / 电子商务": [
+        {
+            "title": {"English": "Personalized AI Shopping Assistant", "中文": "个性化 AI 购物助手 (导购 Agent)"},
+            "problem": {"English": "High cart abandonment rates and poor product discovery for users with vague intent.", "中文": "用户只有模糊购物意图时（如“送给妈妈的生日礼物”），传统搜索效率低，导致购物车放弃率高。"},
+            "solution": {"English": "Implementing an LLM-based Agent that asks clarifying questions, uses RAG to fetch real-time inventory, and recommends products matching the exact context.", "中文": "引入基于大模型的导购 Agent。通过多轮对话挖掘用户真实需求，结合 RAG（检索增强生成）实时查询企业库存并给出精准推荐。"},
+            "impact": {"English": "Increased conversion rate by 20% and reduced average time-to-purchase.", "中文": "商品转化率提升 20%，用户平均决策时间大幅缩短。"}
+        },
+        {
+            "title": {"English": "Dynamic Product Description Generation", "中文": "商品详情页动态生成"},
+            "problem": {"English": "Writing SEO-optimized and engaging product descriptions for thousands of SKUs is time-consuming and expensive.", "中文": "为数以万计的 SKU 撰写吸引人且符合 SEO 规范的商品详情页，耗时极长且人工成本高昂。"},
+            "solution": {"English": "Fine-tuning an open-source model (like Llama 3) on the brand's tone of voice to automatically generate product copy from basic attributes.", "中文": "使用品牌特有的语气数据微调开源大模型（如 Llama 3），只需输入基础参数（颜色、材质等），即可批量生成高质量的商品文案。"},
+            "impact": {"English": "Cut content creation time by 90% and improved organic search traffic.", "中文": "文案创作时间缩减 90%，并有效提升了自然搜索流量。"}
+        }
+    ],
+    "2. Healthcare / 医疗健康": [
+        {
+            "title": {"English": "AI-Assisted Medical Imaging", "中文": "AI 辅助医学影像分析"},
+            "problem": {"English": "Radiologists suffer from fatigue, leading to potential misdiagnoses in subtle cases like early-stage tumors.", "中文": "放射科医生长期工作容易疲劳，在面对早期肿瘤等微小病灶时存在漏诊风险。"},
+            "solution": {"English": "Deploying Computer Vision models (like ResNet or specialized Diffusion models) to highlight areas of concern in X-rays and MRIs before the doctor reviews them.", "中文": "部署计算机视觉模型（如 ResNet）对 X 光或 MRI 影像进行预处理，用热力图高亮疑似病灶区域，作为医生的“第二双眼睛”。"},
+            "impact": {"English": "Reduced diagnostic error rates by 15% and sped up image review times.", "中文": "早期病灶漏诊率降低 15%，极大加快了医生的阅片速度。"}
+        },
+        {
+            "title": {"English": "Clinical Documentation Automation", "中文": "智能病历与临床文档自动生成"},
+            "problem": {"English": "Doctors spend up to 2 hours a day typing patient notes and updating electronic health records (EHR).", "中文": "医生每天需花费长达 2 小时手动录入病历和更新电子健康档案 (EHR)，严重挤压了看病时间。"},
+            "solution": {"English": "Using an ambient AI scribe (speech-to-text + LLM) to listen to the doctor-patient consultation and automatically draft structured clinical notes.", "中文": "使用环境级 AI 记录员（语音识别 + 大模型提取），在医患问诊时自动旁听，并在问诊结束后自动生成结构化的标准病历草稿。"},
+            "impact": {"English": "Saved doctors 1.5 hours daily, significantly reducing physician burnout.", "中文": "平均每天为医生节省 1.5 小时文书工作时间，大幅降低了职业倦怠。"}
+        }
+    ],
+    "3. Finance / 金融服务": [
+        {
+            "title": {"English": "Automated Investment Research", "中文": "智能投研分析与研报生成"},
+            "problem": {"English": "Analysts spend countless hours reading earnings call transcripts, news, and 10-K reports to find actionable insights.", "中文": "金融分析师需要耗费大量时间阅读冗长的财报、电话会议记录和宏观新闻，难以快速提炼投资逻辑。"},
+            "solution": {"English": "A RAG-powered system that ingests financial documents and allows analysts to query specific metrics, automatically synthesizing multi-document reports.", "中文": "构建专属的金融 RAG 系统，将海量研报和新闻向量化。分析师可直接向 AI 提问（如“对比A公司和B公司的毛利率”），AI 会自动提取多篇文档并生成对比摘要。"},
+            "impact": {"English": "Reduced research cycle time by 40%, enabling faster investment decisions.", "中文": "单份深度研报的资料收集时间缩短 40%，决策效率大幅提升。"}
+        },
+        {
+            "title": {"English": "Real-time Fraud Detection", "中文": "实时交易反欺诈检测"},
+            "problem": {"English": "Rule-based fraud detection systems flag too many false positives and struggle to catch novel scam patterns.", "中文": "传统的基于规则的反欺诈系统“误杀率”太高，且面对新型的诈骗手法反应迟钝。"},
+            "solution": {"English": "Training Graph Neural Networks (GNNs) and deep learning models on transaction histories to detect anomalous behaviors and hidden network rings in real-time.", "中文": "利用图神经网络 (GNN) 和深度学习模型分析交易链路，在毫秒级内识别异常行为模式和隐藏的洗钱网络。"},
+            "impact": {"English": "Decreased false positives by 30% while catching 25% more novel fraud cases.", "中文": "误报率降低 30%，同时对新型欺诈案件的拦截率提升了 25%。"}
+        }
+    ]
 }
 
 # RSS Feeds List (Expanded Set for more volume)
@@ -629,12 +676,12 @@ if not df_news.empty:
             st.rerun()
 
     # --- Main Area Search & Sort ---
-    col_search, col_sort = st.columns([3, 1])
+    col_search, col_sort = st.columns([3, 1], vertical_alignment="bottom")
     with col_search:
-        search_query = st.text_input(ui["search"][lang], placeholder="e.g. OpenAI, GPT-5, Robot...")
+        search_query = st.text_input("Search", placeholder=ui["search"][lang], label_visibility="collapsed")
     with col_sort:
         sort_options = [ui["sort_time_desc"][lang], ui["sort_time_asc"][lang], ui["sort_sentiment"][lang]]
-        selected_sort = st.selectbox(ui["sort_by"][lang], sort_options, label_visibility="collapsed")
+        selected_sort = st.selectbox("Sort", sort_options, label_visibility="collapsed")
 
     # --- Apply Filters ---
     filtered_df = df_news.copy()
@@ -695,11 +742,12 @@ if not df_news.empty:
     st.divider()
     
     if not filtered_df.empty:
-        main_tab1, main_tab2, main_tab3, main_tab4 = st.tabs([
+        main_tab1, main_tab2, main_tab3, main_tab4, main_tab5 = st.tabs([
             ui["tab_news"][lang], 
             ui["tab_analytics"][lang], 
             ui["tab_glossary"][lang],
-            ui["tab_career"][lang]
+            ui["tab_career"][lang],
+            ui["tab_cases"][lang]
         ])
         
         with main_tab1:
@@ -940,6 +988,27 @@ if not df_news.empty:
                         st.markdown("**❓ Mock Interview / 模拟面试题**" if lang == "中文" else "**❓ Mock Interview**")
                         for q in data["interview_q"][lang]:
                             st.markdown(f"- {q}")
+                            
+        with main_tab5:
+            st.subheader(ui["tab_cases"][lang])
+            st.markdown("Learn how AI is solving real-world business problems across different industries." if lang == "English" else "了解 AI 技术是如何在不同行业的真实业务场景中解决痛点并创造商业价值的。")
+            st.markdown("---")
+            
+            for industry, cases in BUSINESS_CASES.items():
+                ind_en, ind_zh = industry.split(" / ")
+                display_ind = ind_zh if lang == "中文" else ind_en
+                
+                st.markdown(f"#### {display_ind}")
+                
+                for case in cases:
+                    with st.expander(f"**{case['title'][lang]}**", expanded=False):
+                        st.markdown("**🚨 Problem / 业务痛点:**" if lang == "English" else "**🚨 业务痛点:**")
+                        st.write(case['problem'][lang])
+                        st.markdown("**💡 AI Solution / AI 解决方案:**" if lang == "English" else "**💡 AI 解决方案:**")
+                        st.info(case['solution'][lang])
+                        st.markdown("**📈 Business Impact / 商业价值:**" if lang == "English" else "**📈 商业价值:**")
+                        st.success(case['impact'][lang])
+                st.markdown("<br>", unsafe_allow_html=True)
             
     else:
         st.warning(ui["no_data"][lang])
