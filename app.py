@@ -42,7 +42,7 @@ ui = {
     "table_desc": {"English": "Expand each article to read the summary and access the original source.", "中文": "展开每篇文章可阅读摘要并访问原文。"},
     "no_data": {"English": "No news found or unable to fetch data.", "中文": "未找到新闻或获取数据失败，请稍后重试。"},
     "filters": {"English": "🔍 Filters & Search", "中文": "🔍 筛选与搜索"},
-    "search": {"English": "Search keyword in titles...", "中文": "搜索标题中的关键词..."},
+    "search": {"English": "Search keywords...", "中文": "搜索关键词..."},
     "sort_by": {"English": "Sort By", "中文": "排序方式"},
     "sort_time_desc": {"English": "Newest First", "中文": "按时间降序 (最新)"},
     "sort_time_asc": {"English": "Oldest First", "中文": "按时间升序 (最旧)"},
@@ -53,12 +53,15 @@ ui = {
     "source_type_filter": {"English": "Source Type", "中文": "信息源类型"},
     "time_range_filter": {"English": "Time Range", "中文": "时间跨度"},
     "all": {"English": "All", "中文": "全部"},
-    "read_more": {"English": "Read Original Article", "中文": "阅读原文"},
-    "summary": {"English": "Summary:", "中文": "摘要:"},
-    "source": {"English": "Source:", "中文": "来源平台:"},
-    "published": {"English": "Published:", "中文": "发布时间:"},
-    "sentiment_label": {"English": "Sentiment:", "中文": "情绪:"},
-    "tags": {"English": "Tags:", "中文": "标签:"}
+    "read_more": {"English": "Read Full Article ↗", "中文": "阅读原文 ↗"},
+    "summary": {"English": "Summary", "中文": "摘要"},
+    "source": {"English": "Source", "中文": "来源"},
+    "published": {"English": "Published", "中文": "发布时间"},
+    "sentiment_label": {"English": "Sentiment", "中文": "情绪"},
+    "tags": {"English": "Tags", "中文": "标签"},
+    "tab_news": {"English": "📰 News Feed", "中文": "📰 实时新闻流"},
+    "tab_analytics": {"English": "📊 Data Analytics", "中文": "📊 市场数据大屏"},
+    "top_headlines": {"English": "🔥 Top Headlines (Most Positive)", "中文": "🔥 今日核心利好头条"}
 }
 
 st.title(ui["title"][lang])
@@ -281,27 +284,35 @@ if not df_news.empty:
     with st.sidebar:
         st.header(ui["filters"][lang])
         
-        search_query = st.text_input(ui["search"][lang], "")
+        # Moved search to main area, keeping only advanced filters here
+        st.markdown(f"**{ui['time_range_filter'][lang]}**")
+        selected_time = st.selectbox("Time", [ui["all"][lang]] + list(TIME_RANGES.keys()), label_visibility="collapsed")
+        
+        st.markdown("---")
         
         # Topic & Company Filters
-        col_f1, col_f2 = st.columns(2)
-        with col_f1:
-            selected_topic = st.selectbox(ui["topic_filter"][lang], [ui["all"][lang]] + TOPICS)
-        with col_f2:
-            selected_company = st.selectbox(ui["company_filter"][lang], [ui["all"][lang]] + COMPANIES)
+        st.markdown(f"**{ui['topic_filter'][lang]} & {ui['company_filter'][lang]}**")
+        selected_topic = st.selectbox("Topic", [ui["all"][lang]] + TOPICS, label_visibility="collapsed")
+        selected_company = st.selectbox("Company", [ui["all"][lang]] + COMPANIES, label_visibility="collapsed")
             
-        # Region & Source Type Filters
-        col_f3, col_f4 = st.columns(2)
-        with col_f3:
-            selected_region = st.selectbox(ui["region_filter"][lang], [ui["all"][lang]] + REGIONS)
-        with col_f4:
-            selected_source_type = st.selectbox(ui["source_type_filter"][lang], [ui["all"][lang]] + SOURCE_TYPES)
-            
-        # Time Range Filter
-        selected_time = st.selectbox(ui["time_range_filter"][lang], [ui["all"][lang]] + list(TIME_RANGES.keys()))
+        st.markdown("---")
         
+        # Region & Source Type Filters
+        st.markdown(f"**{ui['region_filter'][lang]} & {ui['source_type_filter'][lang]}**")
+        selected_region = st.selectbox("Region", [ui["all"][lang]] + REGIONS, label_visibility="collapsed")
+        selected_source_type = st.selectbox("Source", [ui["all"][lang]] + SOURCE_TYPES, label_visibility="collapsed")
+        
+        st.markdown("---")
+        if st.button("Reset Filters" if lang == "English" else "重置所有筛选"):
+            st.rerun()
+
+    # --- Main Area Search & Sort ---
+    col_search, col_sort = st.columns([3, 1])
+    with col_search:
+        search_query = st.text_input(ui["search"][lang], placeholder="e.g. OpenAI, GPT-5, Robot...")
+    with col_sort:
         sort_options = [ui["sort_time_desc"][lang], ui["sort_time_asc"][lang], ui["sort_sentiment"][lang]]
-        selected_sort = st.selectbox(ui["sort_by"][lang], sort_options)
+        selected_sort = st.selectbox(ui["sort_by"][lang], sort_options, label_visibility="collapsed")
 
     # --- Apply Filters ---
     filtered_df = df_news.copy()
@@ -362,93 +373,113 @@ if not df_news.empty:
     st.divider()
     
     if not filtered_df.empty:
-        # --- Visualizations ---
-        st.subheader("📊 Analytics Dashboard")
-        tab1, tab2 = st.tabs(["Sentiment & Keywords", "Time & Sources"])
+        main_tab1, main_tab2 = st.tabs([ui["tab_news"][lang], ui["tab_analytics"][lang]])
         
-        with tab1:
-            col_chart1, col_chart2 = st.columns(2)
-            with col_chart1:
-                sentiment_counts = filtered_df['Sentiment'].value_counts().reset_index()
-                sentiment_counts.columns = ['Sentiment', 'Count']
-                if lang == "中文":
-                    sentiment_map = {'Positive': '积极', 'Neutral': '中立', 'Negative': '消极'}
-                    sentiment_counts['Sentiment'] = sentiment_counts['Sentiment'].map(sentiment_map)
-                    color_map = {'积极':'#00CC96', '中立':'#636EFA', '消极':'#EF553B'}
+        with main_tab1:
+            # --- Top Headlines Section ---
+            # Show top 3 most positive articles if any
+            positive_news = filtered_df[filtered_df['Sentiment'] == 'Positive'].sort_values(by='Sentiment_Score', ascending=False)
+            if not positive_news.empty:
+                st.subheader(ui["top_headlines"][lang])
+                cols = st.columns(min(3, len(positive_news)))
+                for idx, (i, row) in enumerate(positive_news.head(3).iterrows()):
+                    with cols[idx]:
+                        with st.container(border=True):
+                            st.markdown(f"##### {row['Title']}")
+                            st.caption(f"{row['Source']} • {row['Date_Str']}")
+                            st.markdown(f"**[{ui['read_more'][lang]}]({row['Link']})**")
+                st.markdown("---")
+
+            # --- Expandable News Feed ---
+            st.subheader(ui["table_title"][lang])
+            
+            for idx, row in filtered_df.iterrows():
+                sentiment_val = row['Sentiment']
+                if sentiment_val == 'Positive':
+                    badge_color = "green"
+                    sent_text = "🟢 Bullish" if lang == "English" else "🟢 利好"
+                elif sentiment_val == 'Negative':
+                    badge_color = "red"
+                    sent_text = "🔴 Bearish" if lang == "English" else "🔴 利空"
                 else:
-                    color_map = {'Positive':'#00CC96', 'Neutral':'#636EFA', 'Negative':'#EF553B'}
+                    badge_color = "blue"
+                    sent_text = "⚪ Neutral" if lang == "English" else "⚪ 中立"
                     
-                fig_sentiment = px.pie(
-                    sentiment_counts, names='Sentiment', values='Count',
-                    color='Sentiment', color_discrete_map=color_map, hole=0.4,
-                    title=ui["sentiment_chart"][lang]
-                )
-                fig_sentiment.update_layout(margin=dict(t=40, b=0, l=0, r=0))
-                st.plotly_chart(fig_sentiment, use_container_width=True)
+                # Create tag badges
+                tags = row['Topics'] + row['Companies'] + row['Regions']
+                tag_str = " ".join([f"`{t}`" for t in tags]) if tags else ""
                 
-            with col_chart2:
-                df_keywords = pd.DataFrame(top_keywords[:10], columns=['Keyword', 'Count']) 
-                df_keywords = df_keywords.sort_values(by='Count', ascending=True)
-                fig_keywords = px.bar(
-                    df_keywords, x='Count', y='Keyword', orientation='h',
-                    color='Count', color_continuous_scale=px.colors.sequential.Blues,
-                    title=ui["keyword_chart"][lang]
-                )
-                fig_keywords.update_layout(margin=dict(t=40, b=0, l=0, r=0))
-                st.plotly_chart(fig_keywords, use_container_width=True)
-                
-        with tab2:
-            col_chart3, col_chart4 = st.columns(2)
-            with col_chart3:
-                time_counts = filtered_df.groupby('Day').size().reset_index(name='Count')
-                fig_time = px.line(
-                    time_counts, x='Day', y='Count', markers=True,
-                    title=ui["time_chart"][lang],
-                    color_discrete_sequence=['#FF7F0E']
-                )
-                fig_time.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
-                st.plotly_chart(fig_time, use_container_width=True)
-                
-            with col_chart4:
-                source_counts = filtered_df['Source'].value_counts().head(10).reset_index()
-                source_counts.columns = ['Source', 'Count']
-                fig_source = px.bar(
-                    source_counts, x='Source', y='Count',
-                    title=ui["source_chart"][lang],
-                    color='Count', color_continuous_scale=px.colors.sequential.Teal
-                )
-                fig_source.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
-                st.plotly_chart(fig_source, use_container_width=True)
+                with st.expander(f"{sent_text} | **{row['Title']}**"):
+                    col_info1, col_info2 = st.columns([3, 1])
+                    with col_info1:
+                        if tag_str:
+                            st.markdown(f"**{ui['tags'][lang]}:** {tag_str}")
+                        st.markdown(f"**{ui['summary'][lang]}:**")
+                        st.write(row['Summary'])
+                    with col_info2:
+                        st.markdown(f"**{ui['published'][lang]}:**<br>{row['Date_Str']}", unsafe_allow_html=True)
+                        st.markdown(f"**{ui['source'][lang]}:**<br>{row['Source']}", unsafe_allow_html=True)
+                        st.markdown(f"<br>**[{ui['read_more'][lang]}]({row['Link']})**", unsafe_allow_html=True)
+                        
+        with main_tab2:
+            # --- Visualizations ---
+            st.subheader("📊 Analytics Dashboard")
+            tab1, tab2 = st.tabs(["Sentiment & Keywords", "Time & Sources"])
             
-        st.divider()
-        
-        # --- Expandable News Feed ---
-        st.subheader(ui["table_title"][lang])
-        st.markdown(ui["table_desc"][lang])
-        
-        for idx, row in filtered_df.iterrows():
-            sentiment_val = row['Sentiment']
-            if sentiment_val == 'Positive':
-                badge_color = "green"
-                sent_text = "积极" if lang == "中文" else "Positive"
-            elif sentiment_val == 'Negative':
-                badge_color = "red"
-                sent_text = "消极" if lang == "中文" else "Negative"
-            else:
-                badge_color = "blue"
-                sent_text = "中立" if lang == "中文" else "Neutral"
-                
-            # Create tag badges
-            tags = row['Topics'] + row['Companies'] + row['Regions']
-            tag_str = " | ".join([f"`{t}`" for t in tags]) if tags else ""
+            with tab1:
+                col_chart1, col_chart2 = st.columns(2)
+                with col_chart1:
+                    sentiment_counts = filtered_df['Sentiment'].value_counts().reset_index()
+                    sentiment_counts.columns = ['Sentiment', 'Count']
+                    if lang == "中文":
+                        sentiment_map = {'Positive': '积极', 'Neutral': '中立', 'Negative': '消极'}
+                        sentiment_counts['Sentiment'] = sentiment_counts['Sentiment'].map(sentiment_map)
+                        color_map = {'积极':'#00CC96', '中立':'#636EFA', '消极':'#EF553B'}
+                    else:
+                        color_map = {'Positive':'#00CC96', 'Neutral':'#636EFA', 'Negative':'#EF553B'}
+                        
+                    fig_sentiment = px.pie(
+                        sentiment_counts, names='Sentiment', values='Count',
+                        color='Sentiment', color_discrete_map=color_map, hole=0.4,
+                        title=ui["sentiment_chart"][lang]
+                    )
+                    fig_sentiment.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                    st.plotly_chart(fig_sentiment, use_container_width=True)
+                    
+                with col_chart2:
+                    df_keywords = pd.DataFrame(top_keywords[:10], columns=['Keyword', 'Count']) 
+                    df_keywords = df_keywords.sort_values(by='Count', ascending=True)
+                    fig_keywords = px.bar(
+                        df_keywords, x='Count', y='Keyword', orientation='h',
+                        color='Count', color_continuous_scale=px.colors.sequential.Blues,
+                        title=ui["keyword_chart"][lang]
+                    )
+                    fig_keywords.update_layout(margin=dict(t=40, b=0, l=0, r=0))
+                    st.plotly_chart(fig_keywords, use_container_width=True)
+                    
+            with tab2:
+                col_chart3, col_chart4 = st.columns(2)
+                with col_chart3:
+                    time_counts = filtered_df.groupby('Day').size().reset_index(name='Count')
+                    fig_time = px.line(
+                        time_counts, x='Day', y='Count', markers=True,
+                        title=ui["time_chart"][lang],
+                        color_discrete_sequence=['#FF7F0E']
+                    )
+                    fig_time.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
+                    st.plotly_chart(fig_time, use_container_width=True)
+                    
+                with col_chart4:
+                    source_counts = filtered_df['Source'].value_counts().head(10).reset_index()
+                    source_counts.columns = ['Source', 'Count']
+                    fig_source = px.bar(
+                        source_counts, x='Source', y='Count',
+                        title=ui["source_chart"][lang],
+                        color='Count', color_continuous_scale=px.colors.sequential.Teal
+                    )
+                    fig_source.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
+                    st.plotly_chart(fig_source, use_container_width=True)
             
-            with st.expander(f"**{row['Title']}**"):
-                st.markdown(f"**{ui['published'][lang]}** {row['Date_Str']} | **{ui['source'][lang]}** {row['Source']} | **{ui['sentiment_label'][lang]}** :{badge_color}[{sent_text}]")
-                if tag_str:
-                    st.markdown(f"**{ui['tags'][lang]}** {tag_str}")
-                st.markdown(f"**{ui['summary'][lang]}**")
-                st.info(row['Summary'])
-                st.markdown(f"🔗 [{ui['read_more'][lang]}]({row['Link']})")
     else:
         st.warning(ui["no_data"][lang])
 else:
