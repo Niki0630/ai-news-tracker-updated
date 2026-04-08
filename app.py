@@ -66,7 +66,9 @@ ui = {
     "top_headlines": {"English": "🔥 Daily Must-Reads (Most Important)", "中文": "🔥 每日必读 (重磅精选)"},
     "topic_dist_chart": {"English": "AI Domain Distribution", "中文": "AI 细分领域分布"},
     "company_mentions_chart": {"English": "Company Mentions", "中文": "热门公司提及热度"},
-    "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"}
+    "wordcloud_chart": {"English": "Keyword Frequency Analysis", "中文": "高频词汇云分析"},
+    "tab_glossary": {"English": "📖 AI Glossary", "中文": "📖 AI 概念科普"},
+    "glossary_intro": {"English": "Transitioning to AI? Here are the core concepts you need to know to decode industry news and job descriptions.", "中文": "准备转型 AI 领域求职？这里是你必须掌握的核心概念与行话，助你快速看懂行业新闻与招聘要求。"}
 }
 
 st.title(ui["title"][lang])
@@ -133,6 +135,46 @@ TIME_RANGES_ZH = {
     "Last 48 Hours": "过去 48 小时",
     "Last 3 Days": "过去 3 天",
     "Last 7 Days": "过去 7 天"
+}
+
+# --- AI Glossary Data ---
+GLOSSARY = {
+    "LLM (Large Language Model / 大语言模型)": {
+        "English": "An AI algorithm that uses deep learning techniques and massive datasets to understand, summarize, generate, and predict content. Examples: GPT-4, Claude 3.",
+        "中文": "一种利用深度学习技术和海量数据来理解、总结、生成和预测新内容的人工智能模型。简单来说就是“读过无数书的超级大脑”。代表作：GPT-4, Claude 3。"
+    },
+    "AGI (Artificial General Intelligence / 通用人工智能)": {
+        "English": "A hypothetical type of AI that can understand, learn, and apply knowledge across a wide range of tasks at a level equal to or beyond human capabilities.",
+        "中文": "理论上的一种 AI，它能在广泛的任务中理解、学习和应用知识，达到甚至超越人类的水平。这是目前 OpenAI 等公司的终极目标。"
+    },
+    "RAG (Retrieval-Augmented Generation / 检索增强生成)": {
+        "English": "A technique that connects an LLM to external databases, allowing it to reference up-to-date or private information before generating an answer, reducing hallucinations.",
+        "中文": "一种技术，让大模型在回答问题前，先去外部企业数据库或文档里“查资料”，从而给出更准确、最新或基于私有数据的回答。很多企业用它做内部知识库问答。"
+    },
+    "Agent (智能体)": {
+        "English": "An AI system capable of autonomous action, tool use (like browsing the web or running code), and decision-making to achieve a specific goal.",
+        "中文": "能够自主行动、使用工具（如上网搜索、写代码）并做出决策以实现特定目标的 AI 系统。它不仅仅是“聊天机器人”，而是能帮你干活的“数字打工人”。"
+    },
+    "Fine-tuning (微调)": {
+        "English": "The process of taking a pre-trained model and training it further on a smaller, specific dataset to adapt it for a particular task or domain.",
+        "中文": "在已经训练好的通用大模型基础上，用特定领域的小数据集（如医疗病历、法律文书）再训练一次，让它成为某个特定领域的专家。"
+    },
+    "Hallucination (幻觉)": {
+        "English": "When an AI model confidently generates false, nonsensical, or unverified information.",
+        "中文": "指 AI 模型“一本正经地胡说八道”，生成看似合理但实际上完全错误、捏造的信息。"
+    },
+    "Token (词元)": {
+        "English": "The basic building blocks of text that LLMs process. A token can be a word, part of a word, or just a single character.",
+        "中文": "大模型处理文本的基本单位。一个 token 可能是一个汉字、一个英文单词或词的一部分。目前绝大多数大模型的 API 计费都是基于处理了多少个 tokens。"
+    },
+    "Prompt Engineering (提示词工程)": {
+        "English": "The practice of designing and refining the text inputs (prompts) given to an AI to get the most accurate and useful outputs.",
+        "中文": "设计和优化输入给 AI 的指令（提示词），引导模型输出最准确、最符合预期结果的技术，被称为“与 AI 沟通的艺术”。"
+    },
+    "Transformer": {
+        "English": "The foundational deep learning architecture behind modern LLMs, introduced by Google in 2017, relying on an 'attention mechanism'.",
+        "中文": "Google 在 2017 年提出的一种深度学习架构，是目前几乎所有主流大模型（包括 GPT 系列）的基础底座，其核心是“注意力机制（Attention）”。"
+    }
 }
 
 # RSS Feeds List (Expanded Set for more volume)
@@ -486,7 +528,7 @@ if not df_news.empty:
     st.divider()
     
     if not filtered_df.empty:
-        main_tab1, main_tab2 = st.tabs([ui["tab_news"][lang], ui["tab_analytics"][lang]])
+        main_tab1, main_tab2, main_tab3 = st.tabs([ui["tab_news"][lang], ui["tab_analytics"][lang], ui["tab_glossary"][lang]])
         
         with main_tab1:
             # --- Top Headlines Section ---
@@ -641,6 +683,18 @@ if not df_news.empty:
                     )
                     fig_source.update_layout(margin=dict(t=40, b=0, l=0, r=0), xaxis_title="", yaxis_title="Articles")
                     st.plotly_chart(fig_source, use_container_width=True)
+                    
+        with main_tab3:
+            st.subheader(ui["tab_glossary"][lang])
+            st.markdown(ui["glossary_intro"][lang])
+            st.markdown("---")
+            
+            search_term = st.text_input("🔍 Search terms / 搜索名词", key="glossary_search")
+            
+            for term, desc in GLOSSARY.items():
+                if search_term.lower() in term.lower() or search_term.lower() in desc[lang].lower():
+                    with st.expander(f"**{term}**"):
+                        st.write(desc[lang])
             
     else:
         st.warning(ui["no_data"][lang])
