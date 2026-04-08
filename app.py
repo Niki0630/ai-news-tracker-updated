@@ -138,42 +138,112 @@ TIME_RANGES_ZH = {
 }
 
 # --- AI Glossary Data ---
-GLOSSARY = {
-    "LLM (Large Language Model / 大语言模型)": {
-        "English": "An AI algorithm that uses deep learning techniques and massive datasets to understand, summarize, generate, and predict content. Examples: GPT-4, Claude 3.",
-        "中文": "一种利用深度学习技术和海量数据来理解、总结、生成和预测新内容的人工智能模型。简单来说就是“读过无数书的超级大脑”。代表作：GPT-4, Claude 3。"
+STRUCTURED_GLOSSARY = {
+    "1. Foundations & Theory / 基础理论": {
+        "Artificial Intelligence (AI / 人工智能)": {
+            "English": "The broader concept of machines being able to carry out tasks in a way that we would consider 'smart'.",
+            "中文": "让机器具备人类智能的广义概念，能像人一样感知、认知、决策和执行。AI 是所有相关技术的总称。"
+        },
+        "Machine Learning (ML / 机器学习)": {
+            "English": "A subset of AI based on the idea that systems can learn from data, identify patterns and make decisions with minimal human intervention.",
+            "中文": "AI 的一个核心分支。核心思想是“不用写死规则，让机器自己从数据中找规律并学会预测”。"
+        },
+        "Deep Learning (DL / 深度学习)": {
+            "English": "A subset of ML that uses multi-layered artificial neural networks to deliver state-of-the-art accuracy in tasks like object detection and speech recognition.",
+            "中文": "机器学习的进阶版。利用多层“人工神经网络”来模拟人脑，是目前 ChatGPT 等大模型背后的绝对主力技术。"
+        },
+        "Neural Network (神经网络)": {
+            "English": "Computing systems with interconnected nodes that work much like neurons in the human brain.",
+            "中文": "模仿人脑神经元结构的计算系统。信息在成千上万的“节点”中层层传递和计算，最终得出结果。"
+        },
+        "Transformer": {
+            "English": "The foundational deep learning architecture behind modern LLMs, introduced by Google in 2017, relying on an 'attention mechanism'.",
+            "中文": "Google 在 2017 年提出的一种深度学习架构，是目前几乎所有主流大模型（包括 GPT 系列）的基础底座，其核心是“注意力机制（Attention）”。"
+        },
+        "Token (词元)": {
+            "English": "The basic building blocks of text that LLMs process. A token can be a word, part of a word, or just a single character.",
+            "中文": "大模型处理文本的基本单位。一个 token 可能是一个汉字、一个英文单词或词的一部分。目前绝大多数大模型的 API 计费都是基于处理了多少个 tokens。"
+        },
+        "Parameters (参数量)": {
+            "English": "The internal variables that an AI model learns during training. Think of them as the 'synapses' of the AI's brain. More parameters usually mean a smarter, but more expensive model (e.g., 7B, 70B).",
+            "中文": "AI 模型在训练过程中学到的内部变量。相当于 AI 大脑里的“突触”数量。参数量越大（如 7B, 70B, 千亿/万亿），模型通常越聪明，但运行成本也越高。"
+        }
     },
-    "AGI (Artificial General Intelligence / 通用人工智能)": {
-        "English": "A hypothetical type of AI that can understand, learn, and apply knowledge across a wide range of tasks at a level equal to or beyond human capabilities.",
-        "中文": "理论上的一种 AI，它能在广泛的任务中理解、学习和应用知识，达到甚至超越人类的水平。这是目前 OpenAI 等公司的终极目标。"
+    "2. Core Models / 核心模型": {
+        "LLM (Large Language Model / 大语言模型)": {
+            "English": "An AI algorithm that uses deep learning techniques and massive datasets to understand, summarize, generate, and predict content. Examples: GPT-4, Claude 3.",
+            "中文": "利用深度学习技术和海量数据来理解、总结、生成和预测新内容的 AI 模型。简单来说就是“读过无数书的超级大脑”。代表作：GPT-4, Claude 3。"
+        },
+        "Foundation Model (基础模型)": {
+            "English": "A large AI model trained on a vast quantity of unlabeled data at scale, which can be adapted (e.g., fine-tuned) to a wide range of downstream tasks.",
+            "中文": "在海量无标签数据上训练出来的超大型 AI 模型，它是一个“全才底座”，可以被微调成各种特定领域的专家。"
+        },
+        "Multimodal (多模态模型)": {
+            "English": "An AI system that can understand and generate multiple types of data formats simultaneously, such as text, images, audio, and video.",
+            "中文": "不仅能看懂文字，还能看懂图片、听懂声音、甚至看懂视频的 AI 系统（如 GPT-4o, Gemini 1.5 Pro）。"
+        },
+        "Diffusion Model (扩散模型)": {
+            "English": "A class of generative AI models used primarily for generating high-quality images and video by gradually adding and then removing noise from data (e.g., Midjourney, Stable Diffusion).",
+            "中文": "目前主流的 AI 画图/视频生成技术（如 Midjourney, Sora）。原理是先把图像打成马赛克（加噪），再让 AI 学习如何把马赛克还原成清晰的高清图像（去噪）。"
+        },
+        "AGI (Artificial General Intelligence / 通用人工智能)": {
+            "English": "A hypothetical type of AI that can understand, learn, and apply knowledge across a wide range of tasks at a level equal to or beyond human capabilities.",
+            "中文": "理论上的一种 AI，能在所有智力任务上达到甚至超越人类的水平。这是目前 OpenAI 等头部公司的终极目标。"
+        }
     },
-    "RAG (Retrieval-Augmented Generation / 检索增强生成)": {
-        "English": "A technique that connects an LLM to external databases, allowing it to reference up-to-date or private information before generating an answer, reducing hallucinations.",
-        "中文": "一种技术，让大模型在回答问题前，先去外部企业数据库或文档里“查资料”，从而给出更准确、最新或基于私有数据的回答。很多企业用它做内部知识库问答。"
+    "3. Training & Tuning / 训练与优化": {
+        "Pre-training (预训练)": {
+            "English": "The initial phase where a model is trained on a massive dataset to learn general language patterns before being specialized.",
+            "中文": "大模型“上大学”的阶段。给它喂海量的互联网文本，让它学会人类语言的规律和世界常识。这个阶段极其昂贵，动辄花费千万美元。"
+        },
+        "Fine-tuning (微调)": {
+            "English": "The process of taking a pre-trained model and training it further on a smaller, specific dataset to adapt it for a particular task or domain.",
+            "中文": "大模型“考研/考证”的阶段。在预训练模型基础上，用特定领域的小数据集（如医疗病历、法律文书）再训练一次，让它成为某个领域的专家。"
+        },
+        "RLHF (Reinforcement Learning from Human Feedback)": {
+            "English": "A method to align an AI model's behavior with human values by rewarding it for generating outputs that human reviewers rate highly.",
+            "中文": "基于人类反馈的强化学习。就是雇佣人类老师给 AI 的回答打分，AI 为了拿高分就会不断调整自己的行为，从而变得更有礼貌、更符合人类价值观。"
+        },
+        "Hallucination (幻觉)": {
+            "English": "When an AI model confidently generates false, nonsensical, or unverified information.",
+            "中文": "指 AI 模型“一本正经地胡说八道”，生成看似合理但实际上完全错误、捏造的信息。"
+        }
     },
-    "Agent (智能体)": {
-        "English": "An AI system capable of autonomous action, tool use (like browsing the web or running code), and decision-making to achieve a specific goal.",
-        "中文": "能够自主行动、使用工具（如上网搜索、写代码）并做出决策以实现特定目标的 AI 系统。它不仅仅是“聊天机器人”，而是能帮你干活的“数字打工人”。"
+    "4. AI Engineering & App / 工程与应用": {
+        "Prompt Engineering (提示词工程)": {
+            "English": "The practice of designing and refining the text inputs (prompts) given to an AI to get the most accurate and useful outputs.",
+            "中文": "设计和优化输入给 AI 的指令（提示词），引导模型输出最准确结果的技术，被称为“与 AI 沟通的魔法”。"
+        },
+        "RAG (Retrieval-Augmented Generation / 检索增强生成)": {
+            "English": "A technique that connects an LLM to external databases, allowing it to reference up-to-date or private information before generating an answer, reducing hallucinations.",
+            "中文": "一种核心工程技术。让大模型在回答问题前，先去企业内部知识库里“查阅资料”，再根据资料回答。有效解决大模型乱编（幻觉）和数据不更新的问题。"
+        },
+        "Agent (智能体)": {
+            "English": "An AI system capable of autonomous action, tool use (like browsing the web or running code), and decision-making to achieve a specific goal.",
+            "中文": "能够自主行动、使用工具（如上网搜索、写代码）并做出决策以实现特定目标的 AI 系统。它不仅仅是“聊天机器人”，而是能帮你干活的“数字打工人”。"
+        },
+        "Vector Database (向量数据库)": {
+            "English": "A specialized database that stores data as mathematical vectors, allowing AI to quickly search for conceptually similar information.",
+            "中文": "专为 AI 时代打造的数据库。它把文字、图片变成一串串数学数字（向量），AI 通过对比数字的距离，就能瞬间找出“意思最相近”的内容。"
+        },
+        "Copilot (AI 助手/副驾驶)": {
+            "English": "An AI tool integrated into software applications to assist users with tasks like writing code, drafting emails, or analyzing data.",
+            "中文": "集成在软件里的 AI 助手。它不像自动驾驶那样完全接管，而是作为“副驾驶”辅助你完成写代码、做 PPT 等工作（如 GitHub Copilot, Microsoft 365 Copilot）。"
+        }
     },
-    "Fine-tuning (微调)": {
-        "English": "The process of taking a pre-trained model and training it further on a smaller, specific dataset to adapt it for a particular task or domain.",
-        "中文": "在已经训练好的通用大模型基础上，用特定领域的小数据集（如医疗病历、法律文书）再训练一次，让它成为某个特定领域的专家。"
-    },
-    "Hallucination (幻觉)": {
-        "English": "When an AI model confidently generates false, nonsensical, or unverified information.",
-        "中文": "指 AI 模型“一本正经地胡说八道”，生成看似合理但实际上完全错误、捏造的信息。"
-    },
-    "Token (词元)": {
-        "English": "The basic building blocks of text that LLMs process. A token can be a word, part of a word, or just a single character.",
-        "中文": "大模型处理文本的基本单位。一个 token 可能是一个汉字、一个英文单词或词的一部分。目前绝大多数大模型的 API 计费都是基于处理了多少个 tokens。"
-    },
-    "Prompt Engineering (提示词工程)": {
-        "English": "The practice of designing and refining the text inputs (prompts) given to an AI to get the most accurate and useful outputs.",
-        "中文": "设计和优化输入给 AI 的指令（提示词），引导模型输出最准确、最符合预期结果的技术，被称为“与 AI 沟通的艺术”。"
-    },
-    "Transformer": {
-        "English": "The foundational deep learning architecture behind modern LLMs, introduced by Google in 2017, relying on an 'attention mechanism'.",
-        "中文": "Google 在 2017 年提出的一种深度学习架构，是目前几乎所有主流大模型（包括 GPT 系列）的基础底座，其核心是“注意力机制（Attention）”。"
+    "5. Compute & Hardware / 算力与基建": {
+        "GPU (Graphics Processing Unit / 图形处理器)": {
+            "English": "Originally for gaming, GPUs excel at processing many calculations simultaneously, making them the engine of choice for training and running AI models.",
+            "中文": "显卡芯片（如英伟达 H100）。由于它非常擅长“同时处理大量简单的数学题”，成为了目前训练和运行 AI 模型不可或缺的算力引擎。"
+        },
+        "Inference (推理)": {
+            "English": "The phase where a trained AI model is put to work, generating predictions or outputs based on new, unseen data (like answering your prompt).",
+            "中文": "AI 训练好之后，实际上线为用户提供服务、回答问题的过程。如果你在使用 ChatGPT，你的每一次提问，都在消耗服务器的“推理算力”。"
+        },
+        "FLOPS (每秒浮点运算次数)": {
+            "English": "Floating-point operations per second. A measure of computer performance, crucial for understanding the immense computational power required for AI.",
+            "中文": "衡量计算机算力速度的指标。AI 模型的训练通常需要极高的 FLOPS，标志着极度密集的数学计算能力。"
+        }
     }
 }
 
@@ -689,12 +759,26 @@ if not df_news.empty:
             st.markdown(ui["glossary_intro"][lang])
             st.markdown("---")
             
-            search_term = st.text_input("🔍 Search terms / 搜索名词", key="glossary_search")
+            search_term = st.text_input("🔍 Search terms / 搜索名词", key="glossary_search").strip()
             
-            for term, desc in GLOSSARY.items():
-                if search_term.lower() in term.lower() or search_term.lower() in desc[lang].lower():
-                    with st.expander(f"**{term}**"):
-                        st.write(desc[lang])
+            for category, terms in STRUCTURED_GLOSSARY.items():
+                # Extract localized category name
+                cat_en, cat_zh = category.split(" / ")
+                display_cat = cat_zh if lang == "中文" else cat_en
+                
+                # Filter terms in this category based on search
+                matching_terms = {}
+                for term, desc in terms.items():
+                    if not search_term or search_term.lower() in term.lower() or search_term.lower() in desc[lang].lower():
+                        matching_terms[term] = desc
+                        
+                # If there are matches, display the category header and the terms
+                if matching_terms:
+                    st.markdown(f"#### {display_cat}")
+                    for term, desc in matching_terms.items():
+                        with st.expander(f"**{term}**"):
+                            st.write(desc[lang])
+                    st.markdown("<br>", unsafe_allow_html=True)
             
     else:
         st.warning(ui["no_data"][lang])
