@@ -73,11 +73,27 @@ st.title(ui["title"][lang])
 st.markdown(ui["desc"][lang])
 
 # --- Whitelists based on user list ---
+# Use internal keys for logic, and map them to display strings
 TOPICS = [
-    "Agent", "开源模型", "闭源模型", "多模态", "推理/加速 (Inference)", 
-    "训练/数据 (Training/Data)", "AI芯片/算力", "AI应用/产品", 
-    "监管/政策", "投融资/并购", "医疗AI", "自动驾驶/机器人"
+    "Agent", "Open Source Models", "Closed Source Models", "Multimodal", "Inference", 
+    "Training/Data", "AI Chips/Compute", "AI Apps/Products", 
+    "Regulation/Policy", "Funding/M&A", "Healthcare AI", "Autonomous Driving/Robotics"
 ]
+
+TOPICS_ZH = {
+    "Agent": "智能代理 (Agent)",
+    "Open Source Models": "开源模型",
+    "Closed Source Models": "闭源模型",
+    "Multimodal": "多模态",
+    "Inference": "推理/加速",
+    "Training/Data": "训练/数据",
+    "AI Chips/Compute": "AI芯片/算力",
+    "AI Apps/Products": "AI应用/产品",
+    "Regulation/Policy": "监管/政策",
+    "Funding/M&A": "投融资/并购",
+    "Healthcare AI": "医疗AI",
+    "Autonomous Driving/Robotics": "自动驾驶/机器人"
+}
 
 COMPANIES = [
     "OpenAI", "Anthropic", "Google", "DeepMind", "Microsoft", 
@@ -88,14 +104,33 @@ REGIONS = [
     "US / North America", "China / Asia", "Europe / EU", "Middle East"
 ]
 
+REGIONS_ZH = {
+    "US / North America": "美国 / 北美",
+    "China / Asia": "中国 / 亚洲",
+    "Europe / EU": "欧洲 / 欧盟",
+    "Middle East": "中东"
+}
+
 SOURCE_TYPES = [
     "Mainstream Media", "Tech Forums", "Research Papers"
 ]
+
+SOURCE_TYPES_ZH = {
+    "Mainstream Media": "主流媒体",
+    "Tech Forums": "技术社区",
+    "Research Papers": "学术论文"
+}
 
 TIME_RANGES = {
     "Last 24 Hours": 1,
     "Last 3 Days": 3,
     "Last 7 Days": 7
+}
+
+TIME_RANGES_ZH = {
+    "Last 24 Hours": "过去 24 小时",
+    "Last 3 Days": "过去 3 天",
+    "Last 7 Days": "过去 7 天"
 }
 
 # RSS Feeds List (Expanded Set for more volume)
@@ -133,12 +168,12 @@ def tag_article(text):
     
     # Check Topics
     if any(k in text_lower for k in ["agent", "代理"]): found_topics.append("Agent")
-    if any(k in text_lower for k in ["open-source", "开源", "llama", "mistral"]): found_topics.append("开源模型")
-    if any(k in text_lower for k in ["chip", "gpu", "h100", "b200", "芯片", "算力"]): found_topics.append("AI芯片/算力")
-    if any(k in text_lower for k in ["regulation", "law", "act", "监管", "法规", "政策"]): found_topics.append("监管/政策")
-    if any(k in text_lower for k in ["funding", "series a", "venture", "融资", "风投", "并购"]): found_topics.append("投融资/并购")
-    if any(k in text_lower for k in ["medical", "health", "fda", "医疗", "健康"]): found_topics.append("医疗AI")
-    if any(k in text_lower for k in ["robot", "autonomous", "fsd", "机器人", "自动驾驶"]): found_topics.append("自动驾驶/机器人")
+    if any(k in text_lower for k in ["open-source", "开源", "llama", "mistral"]): found_topics.append("Open Source Models")
+    if any(k in text_lower for k in ["chip", "gpu", "h100", "b200", "芯片", "算力"]): found_topics.append("AI Chips/Compute")
+    if any(k in text_lower for k in ["regulation", "law", "act", "监管", "法规", "政策"]): found_topics.append("Regulation/Policy")
+    if any(k in text_lower for k in ["funding", "series a", "venture", "融资", "风投", "并购"]): found_topics.append("Funding/M&A")
+    if any(k in text_lower for k in ["medical", "health", "fda", "医疗", "健康"]): found_topics.append("Healthcare AI")
+    if any(k in text_lower for k in ["robot", "autonomous", "fsd", "机器人", "自动驾驶"]): found_topics.append("Autonomous Driving/Robotics")
     
     # Check Companies
     for comp in COMPANIES:
@@ -342,21 +377,40 @@ if not df_news.empty:
         
         # Moved search to main area, keeping only advanced filters here
         st.markdown(f"**{ui['time_range_filter'][lang]}**")
-        selected_time = st.selectbox("Time", [ui["all"][lang]] + list(TIME_RANGES.keys()), label_visibility="collapsed")
+        
+        # Prepare translated options for selectboxes
+        def get_display_opts(keys_list, zh_dict):
+            if lang == "中文":
+                return [ui["all"][lang]] + [zh_dict.get(k, k) for k in keys_list]
+            return [ui["all"][lang]] + keys_list
+            
+        time_opts_display = get_display_opts(list(TIME_RANGES.keys()), TIME_RANGES_ZH)
+        selected_time_display = st.selectbox("Time", time_opts_display, label_visibility="collapsed")
+        # Map back to internal key
+        selected_time = list(TIME_RANGES.keys())[time_opts_display.index(selected_time_display) - 1] if selected_time_display != ui["all"][lang] else ui["all"][lang]
         
         st.markdown("---")
         
         # Topic & Company Filters
         st.markdown(f"**{ui['topic_filter'][lang]} & {ui['company_filter'][lang]}**")
-        selected_topic = st.selectbox("Topic", [ui["all"][lang]] + TOPICS, label_visibility="collapsed")
+        topic_opts_display = get_display_opts(TOPICS, TOPICS_ZH)
+        selected_topic_display = st.selectbox("Topic", topic_opts_display, label_visibility="collapsed")
+        selected_topic = TOPICS[topic_opts_display.index(selected_topic_display) - 1] if selected_topic_display != ui["all"][lang] else ui["all"][lang]
+        
         selected_company = st.selectbox("Company", [ui["all"][lang]] + COMPANIES, label_visibility="collapsed")
             
         st.markdown("---")
         
         # Region & Source Type Filters
         st.markdown(f"**{ui['region_filter'][lang]} & {ui['source_type_filter'][lang]}**")
-        selected_region = st.selectbox("Region", [ui["all"][lang]] + REGIONS, label_visibility="collapsed")
-        selected_source_type = st.selectbox("Source", [ui["all"][lang]] + SOURCE_TYPES, label_visibility="collapsed")
+        
+        region_opts_display = get_display_opts(REGIONS, REGIONS_ZH)
+        selected_region_display = st.selectbox("Region", region_opts_display, label_visibility="collapsed")
+        selected_region = REGIONS[region_opts_display.index(selected_region_display) - 1] if selected_region_display != ui["all"][lang] else ui["all"][lang]
+        
+        source_type_opts_display = get_display_opts(SOURCE_TYPES, SOURCE_TYPES_ZH)
+        selected_source_type_display = st.selectbox("Source", source_type_opts_display, label_visibility="collapsed")
+        selected_source_type = SOURCE_TYPES[source_type_opts_display.index(selected_source_type_display) - 1] if selected_source_type_display != ui["all"][lang] else ui["all"][lang]
         
         st.markdown("---")
         if st.button("Reset Filters" if lang == "English" else "重置所有筛选"):
@@ -461,9 +515,15 @@ if not df_news.empty:
                     badge_color = "blue"
                     sent_text = "⚪ Neutral" if lang == "English" else "⚪ 中立"
                     
-                # Create tag badges
+                # Create tag badges (translate if needed)
+                def translate_tag(t):
+                    if lang == "中文":
+                        if t in TOPICS: return TOPICS_ZH.get(t, t)
+                        if t in REGIONS: return REGIONS_ZH.get(t, t)
+                    return t
+                    
                 tags = row['Topics'] + row['Companies'] + row['Regions']
-                tag_str = " ".join([f"`{t}`" for t in tags]) if tags else ""
+                tag_str = " ".join([f"`{translate_tag(t)}`" for t in tags]) if tags else ""
                 
                 with st.expander(f"{sent_text} | **{row['Title']}**"):
                     col_info1, col_info2 = st.columns([3, 1])
@@ -522,6 +582,10 @@ if not df_news.empty:
                     all_topics = [t for sublist in filtered_df['Topics'] for t in sublist]
                     if all_topics:
                         topic_counts = Counter(all_topics).most_common(10)
+                        # Translate topics for the chart if in Chinese mode
+                        if lang == "中文":
+                            topic_counts = [(TOPICS_ZH.get(t, t), c) for t, c in topic_counts]
+                            
                         df_topics = pd.DataFrame(topic_counts, columns=['Topic', 'Count']).sort_values(by='Count', ascending=True)
                         fig_topics = px.bar(
                             df_topics, x='Count', y='Topic', orientation='h',
