@@ -269,6 +269,9 @@ with st.spinner(ui["scraping"][lang]):
 if not df_news.empty:
     df_news, top_keywords = analyze_trends(df_news)
     
+    # Ensure Published_Date is a datetime object before using .dt
+    df_news['Published_Date'] = pd.to_datetime(df_news['Published_Date'], utc=True, errors='coerce')
+    
     df_news['Date_Str'] = df_news['Published_Date'].dt.strftime('%Y-%m-%d %H:%M')
     df_news['Day'] = df_news['Published_Date'].dt.strftime('%Y-%m-%d')
     
